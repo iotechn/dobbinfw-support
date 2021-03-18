@@ -2,7 +2,7 @@ package com.dobbinsoft.fw.support.aspect;
 
 import com.dobbinsoft.fw.core.util.ReflectUtil;
 import com.dobbinsoft.fw.support.annotation.DynamicConfigProperties;
-import com.dobbinsoft.fw.support.component.DynamicConfigComponent;
+import com.dobbinsoft.fw.support.component.dynamic.DynamicConfigComponent;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;

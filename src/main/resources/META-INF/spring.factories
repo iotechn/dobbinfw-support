@@ -1,0 +1,6 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.dobbinsoft.fw.support.config.db.MybatisPlusConfig,\
+  com.dobbinsoft.fw.support.config.redis.RedisAutoConfig,\
+  com.dobbinsoft.fw.support.config.sms.SMSConfig,\
+  com.dobbinsoft.fw.support.config.storage.StorageClientConfig,\
+  com.dobbinsoft.fw.support.config.mq.DelayedMessageConfig

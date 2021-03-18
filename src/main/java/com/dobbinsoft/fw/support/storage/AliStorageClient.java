@@ -1,6 +1,5 @@
 package com.dobbinsoft.fw.support.storage;
 
-import cn.hutool.core.io.file.FileNameUtil;
 import com.aliyun.oss.OSSClient;
 import com.aliyun.oss.common.comm.ResponseMessage;
 import com.aliyun.oss.model.ObjectMetadata;
