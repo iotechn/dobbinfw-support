@@ -116,5 +116,13 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+	
+	<distributionManagement>
+		<repository>
+			<id>rdc-snapshot</id>
+            <name>Aliyun Xiao</name>
+			<url>https://packages.aliyun.com/maven/repository/2084582-snapshot-Vrq4iK/</url>
+		</repository>
+	</distributionManagement>
 
 </project>

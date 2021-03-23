@@ -24,7 +24,7 @@ public class StorageRequest {
 
     private String contentType;
 
-    private Integer size;
+    private Long size;
 
     private InputStream is;
 
