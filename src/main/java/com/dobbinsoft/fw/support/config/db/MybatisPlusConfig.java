@@ -27,4 +27,13 @@ public class MybatisPlusConfig {
         return paginationInterceptor;
     }
 
+    @Bean
+    public FwSqlInjector fwSqlInjector() {
+        return new FwSqlInjector();
+    }
+
+    @Bean
+    public FwMetaObjectHandler fwMetaObjectHandler() {
+        return new FwMetaObjectHandler();
+    }
 }
