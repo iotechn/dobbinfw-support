@@ -84,13 +84,13 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.4.2-fw</version>
+            <version>3.4.2</version>
         </dependency>
 
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-annotation</artifactId>
-            <version>3.4.2-fw</version>
+            <version>3.4.2</version>
             <scope>compile</scope>
         </dependency>
 
@@ -124,5 +124,31 @@
 			<url>https://packages.aliyun.com/maven/repository/2084582-snapshot-Vrq4iK/</url>
 		</repository>
 	</distributionManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>UTF-8</encoding>
+                    <annotationProcessors>
+                        <annotationProcessor>
+                            com.dobbinsoft.fw.core.build.AnnotationProcessor
+                        </annotationProcessor>
+                        <annotationProcessor>
+                            lombok.launch.AnnotationProcessorHider$AnnotationProcessor
+                        </annotationProcessor>
+                        <annotationProcessor>
+                            lombok.launch.AnnotationProcessorHider$ClaimingProcessor
+                        </annotationProcessor>
+                    </annotationProcessors>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
