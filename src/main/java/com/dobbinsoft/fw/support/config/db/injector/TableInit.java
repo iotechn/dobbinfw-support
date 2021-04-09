@@ -25,7 +25,7 @@ public class TableInit extends AbstractMethod {
         return this.addDeleteMappedStatement(mapperClass, "tableInit", sqlSource);
     }
 
-    public String getCreateSql(Class entityClass, String tableName) {
+    private String getCreateSql(Class entityClass, String tableName) {
         // 开始构建SQL
         Field[] declaredFields = entityClass.getDeclaredFields();
         StringBuilder sb = new StringBuilder();
