@@ -14,4 +14,10 @@ public class LockConst {
      */
     public static final String DYNAMIC_CONFIG_LOCK = "DYNAMIC_CONFIG_LOCK:";
 
+    /**
+     * 定时清空定时器锁
+     * QUARTZ_REDIS_COUNT_CLEAR
+     */
+    public static final String QUARTZ_REDIS_COUNT_CLEAR = "QUARTZ_REDIS_COUNT_CLEAR";
+
 }

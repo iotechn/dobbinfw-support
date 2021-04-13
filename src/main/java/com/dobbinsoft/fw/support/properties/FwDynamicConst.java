@@ -27,4 +27,6 @@ public class FwDynamicConst {
 
     public static final String ADMIN_NOTIFY_CONFIG_PREFIX = "ADMIN_NOTIFY_CONFIG:";
 
+    public static final String RATE_LIMITER_CONFIG_PREFIX = "RATE_LIMITER_CONFIG_PREFIX:";
+
 }
