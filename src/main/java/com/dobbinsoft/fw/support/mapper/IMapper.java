@@ -1,12 +1,17 @@
 package com.dobbinsoft.fw.support.mapper;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Constants;
 import com.dobbinsoft.fw.core.util.ReflectUtil;
 import com.dobbinsoft.fw.support.annotation.ForeignKey;
 import com.dobbinsoft.fw.support.annotation.LeafTable;
+import com.dobbinsoft.fw.support.context.QueryContext;
 import com.dobbinsoft.fw.support.domain.SuperDO;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -254,6 +259,22 @@ public interface IMapper<T> extends BaseMapper<T> {
             }
         }
         return list.toArray(new String[0]);
+    }
+
+    /**
+     * 从查询上下文中获取条件，并且分页查询
+     *
+     * @param page         分页查询条件（可以为 RowBounds.DEFAULT）
+     */
+    default <E extends IPage<T>> E selectPage(E page) {
+        return this.selectPage(page, (Wrapper<T>) QueryContext.get());
+    }
+
+    /**
+     * 从查询上下文中获取条件
+     */
+    default List<T> selectList() {
+        return this.selectList(QueryContext.get());
     }
 
 }
