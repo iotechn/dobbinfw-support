@@ -1,5 +1,7 @@
 package com.dobbinsoft.fw.support.annotation;
 
+import com.dobbinsoft.fw.support.annotation.enums.ListLeafType;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -17,4 +19,18 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface LeafTable {
+
+    /**
+     * 是否批量插入， 若业务上存在字段不一致，则需要单个插入，这里就该false
+     * 若字段不一致，但是使用了批量插入，就会报错
+     * @return
+     */
+    boolean batch() default true;
+
+    /**
+     * 是否在selectListDto\selectPage 时包含此字段
+     * @return
+     */
+    ListLeafType containsList() default ListLeafType.WITHOUT;
+
 }

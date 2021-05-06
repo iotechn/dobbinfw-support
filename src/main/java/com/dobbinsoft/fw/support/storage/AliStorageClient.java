@@ -37,6 +37,7 @@ public class AliStorageClient implements StorageClient, InitializingBean {
                 new PutObjectRequest(
                         properties.getAliBucket(),
                         request.getPath() + "/" + request.getFilename(), request.getIs(), objectMetadata);
+        putObjectRequest.setProcess("");
         PutObjectResult putObjectResult = ossClient.putObject(putObjectRequest);
         ResponseMessage response = putObjectResult.getResponse();
         StorageResult result = new StorageResult();
