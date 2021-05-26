@@ -29,4 +29,6 @@ public class FwDynamicConst {
 
     public static final String RATE_LIMITER_CONFIG_PREFIX = "RATE_LIMITER_CONFIG_PREFIX:";
 
+    public static final String RELIABLE_MQ_CONFIG_PREFIX = "RELIABLE_MQ_CONFIG_PREFIX:";
+
 }

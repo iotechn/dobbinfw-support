@@ -19,7 +19,6 @@ import java.util.function.Function;
  * Date: 2020/8/5
  * Time: 11:31
  */
-@Component
 public class DynamicConfigComponent {
 
     @Autowired

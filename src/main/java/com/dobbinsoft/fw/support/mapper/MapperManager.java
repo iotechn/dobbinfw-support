@@ -28,7 +28,7 @@ public class MapperManager implements InitializingBean {
     @Autowired
     private ApplicationContext applicationContext;
 
-    @Value("${com.dobbinsoft.fw.auto-build-table}")
+    @Value("${com.dobbinsoft.fw.auto-build-table:F}")
     private String enableAutoTable;
 
     @Override

@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
  * Time: 14:31
  */
 @Aspect
-@Component
 public class DynamicConfigAspect {
 
     @Autowired
