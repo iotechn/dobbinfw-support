@@ -59,4 +59,5 @@ public class TableInit extends AbstractMethod {
         sb.append(") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;");
         return sb.toString();
     }
+
 }
