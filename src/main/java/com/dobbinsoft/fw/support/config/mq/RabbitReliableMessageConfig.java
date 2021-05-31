@@ -1,5 +1,7 @@
 package com.dobbinsoft.fw.support.config.mq;
 
+import com.dobbinsoft.fw.support.mq.RabbitReliableMessageQueue;
+import com.dobbinsoft.fw.support.mq.ReliableMessageQueue;
 import com.dobbinsoft.fw.support.properties.FwReliableMQProperties;
 import com.rabbitmq.client.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,11 @@ public class RabbitReliableMessageConfig {
         factory.setUsername(fwReliableMQProperties.getRabbitUsername());
         factory.setPassword(fwReliableMQProperties.getRabbitPassword());
         return factory;
+    }
+
+    @Bean
+    public ReliableMessageQueue reliableMessageQueue() throws Exception {
+        return new RabbitReliableMessageQueue();
     }
 
 }

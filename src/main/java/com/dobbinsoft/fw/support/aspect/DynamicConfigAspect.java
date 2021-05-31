@@ -46,6 +46,8 @@ public class DynamicConfigAspect {
             return dynamicConfigComponent.readInt(prefix + ReflectUtil.getField(signature.getName()), null);
         } else if (returnType == Long.class) {
             return dynamicConfigComponent.readLong(prefix + ReflectUtil.getField(signature.getName()), null);
+        } else if (returnType == Boolean.class) {
+            return dynamicConfigComponent.readBoolean(prefix + ReflectUtil.getField(signature.getName()), null);
         }
         return joinPoint.proceed();
     }

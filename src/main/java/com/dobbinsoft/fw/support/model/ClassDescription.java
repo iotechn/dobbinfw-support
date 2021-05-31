@@ -25,6 +25,11 @@ public class ClassDescription implements Serializable {
      */
     private String app;
 
+    /**
+     * 标记是哪个场景
+     */
+    private String scene;
+
     private Map<String, byte[]> byteMap;
 
 }

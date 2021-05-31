@@ -35,8 +35,8 @@ public abstract class AbstractReliableMessageHandler<T extends Serializable> imp
         if ("rabbit".equals(fwReliableMQProperties.getEnable())) {
             this.connection = connectionFactory.newConnection();
             Channel channel = this.connection.createChannel();
-            channel.exchangeDeclare(fwReliableMQProperties.getRabbitExchangeName(), "topic", false, false, null);
-            channel.queueDeclare(getTopic(), false, false, false, null);
+            channel.exchangeDeclare(fwReliableMQProperties.getRabbitExchangeName(), "topic", true, false, null);
+            channel.queueDeclare(getTopic(), true, false, false, null);
             // 绑定队列和交换机
             channel.queueBind(getTopic(), fwReliableMQProperties.getRabbitExchangeName(), "topic");
             // 创建消费者
@@ -44,11 +44,10 @@ public abstract class AbstractReliableMessageHandler<T extends Serializable> imp
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties,
                                            byte[] body) throws IOException {
-                    Class<T> tClass = (Class) AbstractReliableMessageHandler.class.getGenericInterfaces()[0];
-                    String msg = new String(body, "UTF-8");
                     // 反序列化为 T
-                    T t = JSONObject.parseObject(msg, tClass);
-                    AbstractReliableMessageHandler.this.handle(t);
+                    T t = JSONObject.parseObject(body, AbstractReliableMessageHandler.this.getMessageClass());
+                    AbstractReliableMessageHandler.this.handle(t, body);
+
                 }
             };
             // 开始获取消息

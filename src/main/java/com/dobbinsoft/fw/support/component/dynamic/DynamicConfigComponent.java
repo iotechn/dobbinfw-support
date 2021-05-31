@@ -7,7 +7,9 @@ import com.dobbinsoft.fw.support.constant.CacheConst;
 import com.dobbinsoft.fw.support.constant.LockConst;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -19,7 +21,7 @@ import java.util.function.Function;
  * Date: 2020/8/5
  * Time: 11:31
  */
-public class DynamicConfigComponent {
+public class DynamicConfigComponent implements InitializingBean {
 
     @Autowired
     private DynamicStorageStrategy dynamicStorageStrategy;
@@ -30,7 +32,19 @@ public class DynamicConfigComponent {
     @Autowired
     private LockComponent lockComponent;
 
+    @Value("${com.dobbinsoft.fw.support.dynamic.clear-on-startup:F}")
+    private String clearCacheOnStartup;
+
     private static final Logger logger = LoggerFactory.getLogger(DynamicConfigComponent.class);
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        if ("T".equals(clearCacheOnStartup)) {
+            // 启动时清理缓存
+            cacheComponent.delPrefixKey(CacheConst.DYNAMIC_CACHE);
+            logger.info("[动态配置] 缓存清理成功！");
+        }
+    }
 
     /**
      * 写动态配置
@@ -63,6 +77,10 @@ public class DynamicConfigComponent {
 
     public String readString(String key, String defaultValue) {
         return this.readAction(key, defaultValue, item->item);
+    }
+
+    public Boolean readBoolean(String key, Boolean defaultValue) {
+        return this.readAction(key, defaultValue, Boolean::parseBoolean);
     }
 
     public <T> T readObj(String key, Class<T> clazz) {

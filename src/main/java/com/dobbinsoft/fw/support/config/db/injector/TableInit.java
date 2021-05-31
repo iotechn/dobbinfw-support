@@ -7,6 +7,7 @@ import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlSource;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -51,6 +52,10 @@ public class TableInit extends AbstractMethod {
                 sb.append("`");
                 sb.append(StrUtil.toUnderlineCase(field.getName()));
                 sb.append("` datetime NOT NULL,\n");
+            } else if (fieldType == BigDecimal.class) {
+                sb.append("`");
+                sb.append(StrUtil.toUnderlineCase(field.getName()));
+                sb.append("` decimal(30,20) NOT NULL,\n");
             }
         }
         sb.append("`gmt_update` datetime NOT NULL,\n" +
