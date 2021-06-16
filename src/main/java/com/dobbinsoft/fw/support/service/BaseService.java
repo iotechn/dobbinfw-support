@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class BaseService<U extends IdentityOwner, A extends PermissionOwner> {
 
-    @Autowired
+    @Autowired(required = false)
     protected SessionUtil<U, A> sessionUtil;
 
 }

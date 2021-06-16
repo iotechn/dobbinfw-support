@@ -2,20 +2,22 @@ package com.dobbinsoft.fw.support.mq;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 
 import java.util.HashMap;
 
-public class RedisExpiredListener implements MessageListener {
+public class RedisExpiredListener implements MessageListener, ApplicationContextAware {
 
     /**
      * 客户端监听订阅的topic，当有消息的时候，会触发该方法;
      * 并不能得到value, 只能得到key。
      * 姑且理解为: redis服务在key失效时(或失效后)通知到java服务某个key失效了, 那么在java中不可能得到这个redis-key对应的redis-value。
      */
-    @Autowired
     private HashMap<Integer, DelayedMessageHandler> handlerRouter;
 
     private static final Logger logger = LoggerFactory.getLogger(RedisExpiredListener.class);
@@ -41,5 +43,10 @@ public class RedisExpiredListener implements MessageListener {
         if (handler != null) {
             handler.handle(value.toString());
         }
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.handlerRouter = (HashMap<Integer, DelayedMessageHandler>) applicationContext.getBean("messageHandleRouter");
     }
 }
