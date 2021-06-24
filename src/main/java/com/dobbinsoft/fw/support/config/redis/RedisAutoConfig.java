@@ -1,6 +1,8 @@
 package com.dobbinsoft.fw.support.config.redis;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +20,8 @@ import java.util.List;
 
 @Configuration
 public class RedisAutoConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(RedisAutoConfig.class);
 
     /**** 缓存专用数据源 ****/
     @Bean
@@ -218,6 +222,7 @@ public class RedisAutoConfig {
                 serverList.add(redisServer);
             }
             configuration.setSentinels(serverList);
+            logger.info("[Redis] 哨兵节点: masterName={}, host={}", masterName, host);
             return configuration;
         } else {
             return null;
