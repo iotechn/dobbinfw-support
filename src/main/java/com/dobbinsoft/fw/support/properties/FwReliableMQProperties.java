@@ -2,6 +2,8 @@ package com.dobbinsoft.fw.support.properties;
 
 import com.dobbinsoft.fw.support.annotation.DynamicConfigProperties;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 /**
  * ClassName: FwRabbitMQProperties
@@ -11,7 +13,9 @@ import lombok.Data;
  * @date: 2021-05-26
  */
 @Data
-@DynamicConfigProperties(prefix = FwDynamicConst.RELIABLE_MQ_CONFIG_PREFIX)
+//@DynamicConfigProperties(prefix = FwDynamicConst.RELIABLE_MQ_CONFIG_PREFIX)
+@Component
+@ConfigurationProperties(prefix = "com.dobbinsoft.mq")
 public class FwReliableMQProperties {
 
     /**

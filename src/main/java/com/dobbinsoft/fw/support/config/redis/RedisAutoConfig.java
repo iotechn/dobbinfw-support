@@ -2,10 +2,10 @@ package com.dobbinsoft.fw.support.config.redis;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.RedisPassword;
-import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.*;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
@@ -13,6 +13,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.time.Duration;
+import java.util.LinkedList;
+import java.util.List;
 
 @Configuration
 public class RedisAutoConfig {
@@ -20,7 +22,7 @@ public class RedisAutoConfig {
     /**** 缓存专用数据源 ****/
     @Bean
     public LettuceConnectionFactory defaultLettuceConnectionFactory(
-            RedisStandaloneConfiguration defaultRedisConfig,GenericObjectPoolConfig defaultPoolConfig) {
+            RedisConfiguration defaultRedisConfig,GenericObjectPoolConfig defaultPoolConfig) {
         LettuceClientConfiguration clientConfig =
                 LettucePoolingClientConfiguration.builder().commandTimeout(Duration.ofMillis(5000))
                         .poolConfig(defaultPoolConfig).build();
@@ -45,7 +47,7 @@ public class RedisAutoConfig {
     /**** 用户SESSION专用数据源 ****/
     @Bean
     public LettuceConnectionFactory userLettuceConnectionFactory(
-            RedisStandaloneConfiguration userRedisConfig,GenericObjectPoolConfig userPoolConfig) {
+            RedisConfiguration userRedisConfig,GenericObjectPoolConfig userPoolConfig) {
         LettuceClientConfiguration clientConfig =
                 LettucePoolingClientConfiguration.builder().commandTimeout(Duration.ofMillis(5000))
                         .poolConfig(userPoolConfig).build();
@@ -65,7 +67,7 @@ public class RedisAutoConfig {
     /**** 锁专用数据源 ****/
     @Bean
     public LettuceConnectionFactory lockLettuceConnectionFactory(
-            RedisStandaloneConfiguration lockRedisConfig,GenericObjectPoolConfig lockPoolConfig) {
+            RedisConfiguration lockRedisConfig,GenericObjectPoolConfig lockPoolConfig) {
         LettuceClientConfiguration clientConfig =
                 LettucePoolingClientConfiguration.builder().commandTimeout(Duration.ofMillis(5000))
                         .poolConfig(lockPoolConfig).build();
@@ -82,10 +84,12 @@ public class RedisAutoConfig {
 
     @Configuration
     public static class UserRedisConfig {
-        @Value("${spring.user-redis.host:127.0.0.1}")
+        @Value("${spring.redis.mode}")
+        private String mode;
+        @Value("${spring.redis.master-name}")
+        private String masterName;
+        @Value("${spring.user-redis.host:127.0.0.1:6379}")
         private String host;
-        @Value("${spring.user-redis.port:6379}")
-        private Integer port;
         @Value("${spring.user-redis.password:}")
         private String password;
         @Value("${spring.user-redis.database:0}")
@@ -111,22 +115,19 @@ public class RedisAutoConfig {
         }
 
         @Bean
-        public RedisStandaloneConfiguration userRedisConfig() {
-            RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
-            config.setHostName(host);
-            config.setPassword(RedisPassword.of(password));
-            config.setPort(port);
-            config.setDatabase(database);
-            return config;
+        public RedisConfiguration userRedisConfig() {
+            return getRedisConfiguration(masterName, mode, host, password, database);
         }
     }
 
     @Configuration
     public static class LockRedisConfig {
-        @Value("${spring.lock-redis.host:127.0.0.1}")
+        @Value("${spring.redis.master-name}")
+        private String masterName;
+        @Value("${spring.redis.mode}")
+        private String mode;
+        @Value("${spring.lock-redis.host:127.0.0.1:6379}")
         private String host;
-        @Value("${spring.lock-redis.port:6379}")
-        private Integer port;
         @Value("${spring.lock-redis.password:}")
         private String password;
         @Value("${spring.lock-redis.database:0}")
@@ -152,23 +153,20 @@ public class RedisAutoConfig {
         }
 
         @Bean
-        public RedisStandaloneConfiguration lockRedisConfig() {
-            RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
-            config.setHostName(host);
-            config.setPassword(RedisPassword.of(password));
-            config.setPort(port);
-            config.setDatabase(database);
-            return config;
+        public RedisConfiguration lockRedisConfig() {
+            return getRedisConfiguration(masterName, mode, host, password, database);
         }
     }
 
 
     @Configuration
     public static class DefaultRedisConfig {
-        @Value("${spring.redis.host:127.0.0.1}")
+        @Value("${spring.redis.master-name}")
+        private String masterName;
+        @Value("${spring.redis.mode}")
+        private String mode;
+        @Value("${spring.redis.host:127.0.0.1:6379}")
         private String host;
-        @Value("${spring.redis.port:6379}")
-        private Integer port;
         @Value("${spring.redis.password:}")
         private String password;
         @Value("${spring.redis.database:0}")
@@ -194,13 +192,36 @@ public class RedisAutoConfig {
         }
 
         @Bean
-        public RedisStandaloneConfiguration defaultRedisConfig() {
+        public RedisConfiguration defaultRedisConfig() {
+            return getRedisConfiguration(masterName, mode, host, password, database);
+        }
+
+    }
+
+    private static RedisConfiguration getRedisConfiguration(String masterName, String mode, String host, String password, Integer database) {
+        if (mode.equals("single")) {
             RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
-            config.setHostName(host);
+            String[] hostArray = host.split(":");
+            config.setHostName(hostArray[0]);
             config.setPassword(RedisPassword.of(password));
-            config.setPort(port);
+            config.setPort(Integer.parseInt(hostArray[1]));
             config.setDatabase(database);
             return config;
+        } else if (mode.equals("sentinel")) {
+            RedisSentinelConfiguration configuration = new RedisSentinelConfiguration();
+            configuration.setMaster(masterName);
+            String[] hostList = host.split(",");
+            List<RedisNode> serverList = new LinkedList<>();
+            for (String hostItem : hostList) {
+                String[] hostArray = hostItem.split(":");
+                RedisServer redisServer = new RedisServer(hostArray[0], Integer.parseInt(hostArray[1]));
+                serverList.add(redisServer);
+            }
+            configuration.setSentinels(serverList);
+            return configuration;
+        } else {
+            return null;
         }
     }
+
 }

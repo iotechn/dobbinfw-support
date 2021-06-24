@@ -2,6 +2,8 @@ package com.dobbinsoft.fw.support.properties;
 
 import com.dobbinsoft.fw.support.annotation.DynamicConfigProperties;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 /**
  * Created with IntelliJ IDEA.
@@ -11,7 +13,9 @@ import lombok.Data;
  * Time: 16:12
  */
 @Data
-@DynamicConfigProperties(prefix = FwDynamicConst.WX_APP_CONFIG_PREFIX)
+//@DynamicConfigProperties(prefix = FwDynamicConst.WX_APP_CONFIG_PREFIX)
+@Component
+@ConfigurationProperties(prefix = "com.dobbinsoft.wx-app")
 public class FwWxAppProperties {
 
     private String miniAppId;

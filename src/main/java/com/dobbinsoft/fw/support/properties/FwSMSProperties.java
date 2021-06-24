@@ -2,6 +2,8 @@ package com.dobbinsoft.fw.support.properties;
 
 import com.dobbinsoft.fw.support.annotation.DynamicConfigProperties;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 /**
  * Description:
@@ -10,7 +12,9 @@ import lombok.Data;
  * Time: 15:51
  */
 @Data
-@DynamicConfigProperties(prefix = FwDynamicConst.SMS_CONFIG_PREFIX)
+//@DynamicConfigProperties(prefix = FwDynamicConst.SMS_CONFIG_PREFIX)
+@Component
+@ConfigurationProperties(prefix = "com.dobbinsoft.sms")
 public class FwSMSProperties {
 
     private String enable;
