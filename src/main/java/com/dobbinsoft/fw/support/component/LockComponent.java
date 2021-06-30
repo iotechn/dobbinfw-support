@@ -23,6 +23,9 @@ public class LockComponent {
     @Autowired
     private StringRedisTemplate lockRedisTemplate;
 
+    @Autowired
+    private BeforeGetLockKey beforeGetLockKey;
+
     private static final String LOCK_PREFIX = "LOCK_PREFIX_";
 
     /**
@@ -33,14 +36,14 @@ public class LockComponent {
      * @return
      */
     public boolean tryLock(String key, Integer timeoutSec) {
-        return lockRedisTemplate.opsForValue().setIfAbsent(LOCK_PREFIX + key, System.currentTimeMillis() + "", Duration.ofSeconds(timeoutSec));
+        return lockRedisTemplate.opsForValue().setIfAbsent(LOCK_PREFIX + getKey(key), System.currentTimeMillis() + "", Duration.ofSeconds(timeoutSec));
     }
 
     public boolean tryLockMulti(Collection<String> keys, Integer timeoutSec) {
         Map<String, String> map = new HashMap<>();
         String now = System.currentTimeMillis() + "";
         for (String key : keys) {
-            map.put(key, now);
+            map.put(getKey(key), now);
         }
         boolean suc = lockRedisTemplate.opsForValue().multiSetIfAbsent(map);
         if (suc) {
@@ -52,18 +55,25 @@ public class LockComponent {
     }
 
     public void release(String key) {
-        lockRedisTemplate.delete(LOCK_PREFIX + key);
+        lockRedisTemplate.delete(LOCK_PREFIX + getKey(key));
     }
 
     public boolean hashPut(String table, String key) {
-        return lockRedisTemplate.opsForHash().putIfAbsent(table, key, key);
+        return lockRedisTemplate.opsForHash().putIfAbsent(table, getKey(key), key);
     }
 
     public boolean hashContains(String table, String key) {
-        return lockRedisTemplate.opsForHash().hasKey(table, key);
+        return lockRedisTemplate.opsForHash().hasKey(table, getKey(key));
     }
 
     public void hashDel(String table, String key) {
-        lockRedisTemplate.opsForHash().delete(table, key);
+        lockRedisTemplate.opsForHash().delete(table, getKey(key));
+    }
+
+    private String getKey(String key) {
+        if (beforeGetLockKey != null) {
+            return beforeGetLockKey.getKey(key);
+        }
+        return key;
     }
 }

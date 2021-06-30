@@ -12,8 +12,7 @@ import org.springframework.stereotype.Component;
  * Time: 15:12
  */
 @Data
-//@DynamicConfigProperties(prefix = FwDynamicConst.WX_PAY_CONFIG_PREFIX)
-@Component
+@DynamicConfigProperties(prefix = FwDynamicConst.WX_PAY_CONFIG_PREFIX)
 @ConfigurationProperties(prefix = "com.dobbinsoft.wx-pay")
 public class FwWxPayProperties {
 

@@ -8,6 +8,7 @@ import com.dobbinsoft.fw.support.component.open.OpenPlatformStorageStrategy;
 import com.dobbinsoft.fw.support.component.open.model.OPClient;
 import com.dobbinsoft.fw.support.component.open.model.OPClientPermission;
 import com.dobbinsoft.fw.support.component.open.model.OPNotify;
+import com.dobbinsoft.fw.support.properties.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -24,11 +25,7 @@ import java.util.List;
  * @author: e-weichaozheng
  * @date: 2021-05-20
  */
-@Configuration
 public class DynamicConfig {
-
-    @Autowired
-    private ApplicationContext applicationContext;
 
     @Bean
     @ConditionalOnMissingBean(DynamicStorageStrategy.class)
@@ -46,6 +43,47 @@ public class DynamicConfig {
     @ConditionalOnBean(DynamicStorageStrategy.class)
     public DynamicConfigAspect dynamicConfigAspect() {
         return new DynamicConfigAspect();
+    }
+
+    /** 框架给出的常用配置 **/
+    @Bean
+    public FwAdminNotifyProperties fwAdminNotifyProperties() {
+        return new FwAdminNotifyProperties();
+    }
+
+    @Bean
+    public FwObjectStorageProperties fwObjectStorageProperties() {
+        return new FwObjectStorageProperties();
+    }
+
+    @Bean
+    public FwRateLimitProperties fwRateLimitProperties() {
+        return new FwRateLimitProperties();
+    }
+
+    @Bean
+    public FwReliableMQProperties fwReliableMQProperties() {
+        return new FwReliableMQProperties();
+    }
+
+    @Bean
+    public FwSMSProperties fwSMSProperties() {
+        return new FwSMSProperties();
+    }
+
+    @Bean
+    public FwSystemProperties fwSystemProperties() {
+        return new FwSystemProperties();
+    }
+
+    @Bean
+    public FwWxAppProperties fwWxAppProperties() {
+        return new FwWxAppProperties();
+    }
+
+    @Bean
+    public FwWxPayProperties fwWxPayProperties() {
+        return new FwWxPayProperties();
     }
 
 }

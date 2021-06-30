@@ -13,8 +13,7 @@ import org.springframework.stereotype.Component;
  * Time: 16:12
  */
 @Data
-//@DynamicConfigProperties(prefix = FwDynamicConst.WX_APP_CONFIG_PREFIX)
-@Component
+@DynamicConfigProperties(prefix = FwDynamicConst.WX_APP_CONFIG_PREFIX)
 @ConfigurationProperties(prefix = "com.dobbinsoft.wx-app")
 public class FwWxAppProperties {
 

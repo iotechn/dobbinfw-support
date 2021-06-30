@@ -13,8 +13,7 @@ import org.springframework.stereotype.Component;
  * Time: 21:14
  */
 @Data
-//@DynamicConfigProperties(prefix = FwDynamicConst.ADMIN_NOTIFY_CONFIG_PREFIX)
-@Component
+@DynamicConfigProperties(prefix = FwDynamicConst.ADMIN_NOTIFY_CONFIG_PREFIX)
 @ConfigurationProperties(prefix = "com.dobbinsoft.admin-notify")
 public class FwAdminNotifyProperties {
 

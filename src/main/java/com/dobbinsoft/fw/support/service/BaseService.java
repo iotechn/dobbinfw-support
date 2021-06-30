@@ -2,7 +2,7 @@ package com.dobbinsoft.fw.support.service;
 
 import com.dobbinsoft.fw.core.entiy.inter.IdentityOwner;
 import com.dobbinsoft.fw.core.entiy.inter.PermissionOwner;
-import com.dobbinsoft.fw.core.util.SessionUtil;
+import com.dobbinsoft.fw.core.util.ISessionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -15,6 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class BaseService<U extends IdentityOwner, A extends PermissionOwner> {
 
     @Autowired(required = false)
-    protected SessionUtil<U, A> sessionUtil;
+    protected ISessionUtil<U, A> sessionUtil;
 
 }

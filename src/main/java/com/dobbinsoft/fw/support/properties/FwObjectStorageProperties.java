@@ -12,8 +12,7 @@ import org.springframework.stereotype.Component;
  * Time: 15:42
  */
 @Data
-//@DynamicConfigProperties(prefix = FwDynamicConst.OSS_CONFIG_PREFIX)
-@Component
+@DynamicConfigProperties(prefix = FwDynamicConst.OSS_CONFIG_PREFIX)
 @ConfigurationProperties(prefix = "com.dobbinsoft.oss")
 public class FwObjectStorageProperties {
 

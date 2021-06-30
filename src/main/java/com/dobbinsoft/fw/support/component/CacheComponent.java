@@ -21,6 +21,9 @@ public class CacheComponent {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
+    @Autowired(required = false)
+    private BeforeGetCacheKey beforeGetCacheKey;
+
     /**
      * 放入不过期不序列化缓存
      *
@@ -28,7 +31,7 @@ public class CacheComponent {
      * @param value
      */
     public void putRaw(String key, String value) {
-        stringRedisTemplate.opsForValue().set(key, value);
+        stringRedisTemplate.opsForValue().set(getKey(key), value);
     }
 
     /**
@@ -39,7 +42,7 @@ public class CacheComponent {
      * @param expireSec
      */
     public void putRaw(String key, String value, Integer expireSec) {
-        stringRedisTemplate.opsForValue().set(key, value, expireSec, TimeUnit.SECONDS);
+        stringRedisTemplate.opsForValue().set(getKey(key), value, expireSec, TimeUnit.SECONDS);
     }
 
     /**
@@ -49,7 +52,7 @@ public class CacheComponent {
      * @return
      */
     public String getRaw(String key) {
-        return stringRedisTemplate.opsForValue().get(key);
+        return stringRedisTemplate.opsForValue().get(getKey(key));
     }
 
 
@@ -60,7 +63,7 @@ public class CacheComponent {
      * @param obj
      */
     public void putObj(String key, Object obj) {
-        stringRedisTemplate.opsForValue().set(key, JSONObject.toJSONString(obj));
+        stringRedisTemplate.opsForValue().set(getKey(key), JSONObject.toJSONString(obj));
     }
 
     /**
@@ -71,7 +74,7 @@ public class CacheComponent {
      * @param expireSec
      */
     public void putObj(String key, Object obj, Integer expireSec) {
-        stringRedisTemplate.opsForValue().set(key, JSONObject.toJSONString(obj), expireSec, TimeUnit.SECONDS);
+        stringRedisTemplate.opsForValue().set(getKey(key), JSONObject.toJSONString(obj), expireSec, TimeUnit.SECONDS);
     }
 
     /**
@@ -83,7 +86,7 @@ public class CacheComponent {
      * @return
      */
     public <T> T getObj(String key, Class<T> clazz) {
-        String json = stringRedisTemplate.opsForValue().get(key);
+        String json = stringRedisTemplate.opsForValue().get(getKey(key));
         if (StringUtils.isEmpty(json)) {
             return null;
         }
@@ -99,7 +102,7 @@ public class CacheComponent {
      * @return
      */
     public <T> List<T> getObjList(String key, Class<T> clazz) {
-        String json = stringRedisTemplate.opsForValue().get(key);
+        String json = stringRedisTemplate.opsForValue().get(getKey(key));
         if (StringUtils.isEmpty(json)) {
             return null;
         }
@@ -114,7 +117,7 @@ public class CacheComponent {
      * @param value
      */
     public void putHashRaw(String hashName, String key, String value) {
-        stringRedisTemplate.opsForHash().put(hashName, key, value);
+        stringRedisTemplate.opsForHash().put(hashName, getKey(key), value);
     }
 
     /**
@@ -125,7 +128,7 @@ public class CacheComponent {
      * @param obj
      */
     public void putHashObj(String hashName, String key, Object obj) {
-        stringRedisTemplate.opsForHash().put(hashName, key, JSONObject.toJSONString(obj));
+        stringRedisTemplate.opsForHash().put(hashName, getKey(key), JSONObject.toJSONString(obj));
     }
 
     /**
@@ -137,10 +140,11 @@ public class CacheComponent {
      * @param expireSec
      */
     public void putHashObj(String hashName, String key, Object obj, Integer expireSec) {
-        boolean hasKey = stringRedisTemplate.hasKey(key);
-        stringRedisTemplate.opsForHash().put(hashName, key, JSONObject.toJSONString(obj));
+        String k = getKey(key);
+        boolean hasKey = stringRedisTemplate.hasKey(k);
+        stringRedisTemplate.opsForHash().put(hashName, k, JSONObject.toJSONString(obj));
         if (!hasKey) {
-            stringRedisTemplate.expire(key, expireSec, TimeUnit.SECONDS);
+            stringRedisTemplate.expire(k, expireSec, TimeUnit.SECONDS);
         }
     }
 
@@ -153,7 +157,7 @@ public class CacheComponent {
      * @return
      */
     public long incrementHashKey(String hashName, String key, long delta) {
-        return stringRedisTemplate.opsForHash().increment(hashName, key, delta);
+        return stringRedisTemplate.opsForHash().increment(hashName, getKey(key), delta);
     }
 
     /**
@@ -165,7 +169,7 @@ public class CacheComponent {
      * @return
      */
     public long decrementHashKey(String hashName, String key, long delta) {
-        return stringRedisTemplate.opsForHash().increment(hashName, key, -delta);
+        return stringRedisTemplate.opsForHash().increment(hashName, getKey(key), -delta);
     }
 
     /**
@@ -176,7 +180,7 @@ public class CacheComponent {
      * @return
      */
     public String getHashRaw(String hashName, String key) {
-        String o = (String) stringRedisTemplate.opsForHash().get(hashName, key);
+        String o = (String) stringRedisTemplate.opsForHash().get(hashName, getKey(key));
         if (StringUtils.isEmpty(o)) {
             return null;
         }
@@ -193,7 +197,7 @@ public class CacheComponent {
      * @return
      */
     public <T> T getHashObj(String hashName, String key, Class<T> clazz) {
-        String o = (String) stringRedisTemplate.opsForHash().get(hashName, key);
+        String o = (String) stringRedisTemplate.opsForHash().get(hashName, getKey(key));
         if (StringUtils.isEmpty(o)) {
             return null;
         }
@@ -210,7 +214,7 @@ public class CacheComponent {
      * @return
      */
     public <T> List<T> getHashList(String hashName, String key, Class<T> clazz) {
-        String o = (String) stringRedisTemplate.opsForHash().get(hashName, key);
+        String o = (String) stringRedisTemplate.opsForHash().get(hashName, getKey(key));
         if (StringUtils.isEmpty(o)) {
             return null;
         }
@@ -220,14 +224,14 @@ public class CacheComponent {
     /**
      * 批量获取Hash表里面的值
      *
-     * @param hashName
-     * @param keyCollection String类型键集合 Collection<String>
+     * @param key 桶的名字
+     * @param hashNameCollection String类型键集合 Collection<String>
      * @param clazz
      * @param <T>
      * @return
      */
-    public <T> List<T> getHashMultiAsList(String hashName, Collection keyCollection, Class<T> clazz) {
-        List<String> list = stringRedisTemplate.opsForHash().multiGet(hashName, keyCollection);
+    public <T> List<T> getHashMultiAsList(String key, Collection hashNameCollection, Class<T> clazz) {
+        List<String> list = stringRedisTemplate.opsForHash().multiGet(getKey(key), hashNameCollection);
         return list.stream().map(item -> JSONObject.parseObject(item, clazz)).collect(Collectors.toList());
     }
 
@@ -238,23 +242,21 @@ public class CacheComponent {
      * @param key
      */
     public void delHashKey(String hashName, String key) {
-        stringRedisTemplate.opsForHash().delete(hashName, key);
-    }
-
-    public void delHashKeyList(String hashName, List<String> keys) {
-        stringRedisTemplate.opsForHash().delete(hashName, keys.toArray());
+        stringRedisTemplate.opsForHash().delete(hashName, getKey(key));
     }
 
     public void putHashAll(String key, Map<String, String> map, Integer expireSec) {
-        stringRedisTemplate.opsForHash().putAll(key, map);
-        stringRedisTemplate.expire(key, expireSec, TimeUnit.SECONDS);
+        String k = getKey(key);
+        stringRedisTemplate.opsForHash().putAll(k, map);
+        stringRedisTemplate.expire(k, expireSec, TimeUnit.SECONDS);
     }
 
     public Map<String,String> getHashAll(String key) {
-        if (!stringRedisTemplate.hasKey(key)) {
+        String k = getKey(key);
+        if (!stringRedisTemplate.hasKey(k)) {
             return null;
         }
-        return (Map)stringRedisTemplate.opsForHash().entries(key);
+        return (Map)stringRedisTemplate.opsForHash().entries(k);
     }
 
 
@@ -266,11 +268,11 @@ public class CacheComponent {
      * @param value
      */
     public void putZSet(String setName, double source, String value) {
-        stringRedisTemplate.opsForZSet().add(setName, value, source);
+        stringRedisTemplate.opsForZSet().add(getKey(setName), value, source);
     }
 
     public void putZSetMulti(String setName, Set<ZSetOperations.TypedTuple<String>> values) {
-        stringRedisTemplate.opsForZSet().add(setName, values);
+        stringRedisTemplate.opsForZSet().add(getKey(setName), values);
     }
 
     /**
@@ -280,7 +282,7 @@ public class CacheComponent {
      * @param value
      */
     public void delZSet(String setName, String value) {
-        stringRedisTemplate.opsForZSet().remove(setName, value);
+        stringRedisTemplate.opsForZSet().remove(getKey(setName), value);
     }
 
     /**
@@ -293,13 +295,14 @@ public class CacheComponent {
      * @return
      */
     public Page<String> getZSetPage(String setName, int pageNo, int pageSize, boolean isAsc) {
-        Long size = stringRedisTemplate.opsForZSet().size(setName);
+        String key = getKey(setName);
+        Long size = stringRedisTemplate.opsForZSet().size(key);
         List<String> list = new ArrayList<>();
         if (size > 0) {
             if (isAsc) {
-                list.addAll(stringRedisTemplate.opsForZSet().range(setName, (pageNo - 1) * pageSize, pageNo * pageSize - 1));
+                list.addAll(stringRedisTemplate.opsForZSet().range(key, (pageNo - 1) * pageSize, pageNo * pageSize - 1));
             } else {
-                list.addAll(stringRedisTemplate.opsForZSet().reverseRange(setName, (pageNo - 1) * pageSize, pageNo * pageSize - 1));
+                list.addAll(stringRedisTemplate.opsForZSet().reverseRange(key, (pageNo - 1) * pageSize, pageNo * pageSize - 1));
             }
         }
         return new Page<>(list, pageNo, pageSize, size);
@@ -313,12 +316,13 @@ public class CacheComponent {
      * @param exceed 可允许超出范围，清理缓存区。
      */
     public void putZSetLru(String setName, String value, int max, int exceed) {
-        Long size = stringRedisTemplate.opsForZSet().size(setName);
+        String key = getKey(setName);
+        Long size = stringRedisTemplate.opsForZSet().size(key);
         if (size > max + exceed - 1) {
             //超过了。淘汰了
-            stringRedisTemplate.opsForZSet().removeRange(setName, size - exceed, size);
+            stringRedisTemplate.opsForZSet().removeRange(key, size - exceed, size);
         }
-        stringRedisTemplate.opsForZSet().add(setName, value, -System.currentTimeMillis());
+        stringRedisTemplate.opsForZSet().add(key, value, -System.currentTimeMillis());
     }
 
     /**
@@ -328,7 +332,7 @@ public class CacheComponent {
      * @param delta
      */
     public Double incZSetSource(String setName, String value, double delta) {
-        return stringRedisTemplate.opsForZSet().incrementScore(setName, value, delta);
+        return stringRedisTemplate.opsForZSet().incrementScore(getKey(setName), value, delta);
     }
 
     /**
@@ -338,32 +342,39 @@ public class CacheComponent {
      * @return
      */
     public Set<String> getZSetLruTopN(String setName, int n) {
-        return stringRedisTemplate.opsForZSet().range(setName, 0 , n);
+        return stringRedisTemplate.opsForZSet().range(getKey(setName), 0 , n);
     }
 
 
     /**
+     * TODO 保证原子性问题
      * 向一个set中添加数据
      * @param key
      * @param member
      * @param expireSec
      */
     public void putSetRaw(String key, String member, Integer expireSec) {
-        stringRedisTemplate.opsForSet().add(key, member);
-        stringRedisTemplate.expire(key, expireSec, TimeUnit.SECONDS);
+        stringRedisTemplate.opsForSet().add(getKey(key), member);
+        stringRedisTemplate.expire(getKey(key), expireSec, TimeUnit.SECONDS);
     }
 
+    /**
+     * TODO 保证原子性问题
+     * @param key
+     * @param set
+     * @param expireSec
+     */
     public void putSetRawAll(String key, String[] set, Integer expireSec) {
-        stringRedisTemplate.opsForSet().add(key, set);
-        stringRedisTemplate.expire(key, expireSec, TimeUnit.SECONDS);
+        stringRedisTemplate.opsForSet().add(getKey(key), set);
+        stringRedisTemplate.expire(getKey(key), expireSec, TimeUnit.SECONDS);
     }
 
     public void removeSetRaw(String key, String member) {
-        stringRedisTemplate.opsForSet().remove(key, member);
+        stringRedisTemplate.opsForSet().remove(getKey(key), member);
     }
 
     public boolean isSetMember(String key, String member) {
-        return stringRedisTemplate.opsForSet().isMember(key, member);
+        return stringRedisTemplate.opsForSet().isMember(getKey(key), member);
     }
 
 
@@ -373,7 +384,7 @@ public class CacheComponent {
      * @param key
      */
     public void del(String key) {
-        stringRedisTemplate.delete(key);
+        stringRedisTemplate.delete(getKey(key));
     }
 
     /**
@@ -383,7 +394,7 @@ public class CacheComponent {
      * @return
      */
     public boolean hasKey(String key) {
-        return stringRedisTemplate.hasKey(key);
+        return stringRedisTemplate.hasKey(getKey(key));
     }
 
 
@@ -394,7 +405,7 @@ public class CacheComponent {
      * @return
      */
     public Set<String> getPrefixKeySet(String prefix) {
-        return stringRedisTemplate.keys(prefix + "*");
+        return stringRedisTemplate.keys(getKey(prefix) + "*");
     }
 
     public void delPrefixKey(String prefix) {
@@ -411,8 +422,19 @@ public class CacheComponent {
      * @return
      */
     public Long getKeyExpire(String key){
-        return stringRedisTemplate.getExpire(key);
+        return stringRedisTemplate.getExpire(getKey(key));
     }
 
+    /**
+     * 获取键 前置处理
+     * @param key
+     * @return
+     */
+    public String getKey(String key) {
+        if (beforeGetCacheKey != null) {
+            return beforeGetCacheKey.getKey(key);
+        }
+        return key;
+    }
 
 }

@@ -13,8 +13,7 @@ import org.springframework.stereotype.Component;
  * @date: 2021-05-26
  */
 @Data
-//@DynamicConfigProperties(prefix = FwDynamicConst.RELIABLE_MQ_CONFIG_PREFIX)
-@Component
+@DynamicConfigProperties(prefix = FwDynamicConst.RELIABLE_MQ_CONFIG_PREFIX)
 @ConfigurationProperties(prefix = "com.dobbinsoft.mq")
 public class FwReliableMQProperties {
 

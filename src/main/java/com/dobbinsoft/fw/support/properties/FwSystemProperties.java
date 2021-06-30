@@ -12,8 +12,7 @@ import org.springframework.stereotype.Component;
  * Time: 21:47
  */
 @Data
-//@DynamicConfigProperties(prefix = FwDynamicConst.SYSTEM_CONFIG_PREFIX)
-@Component
+@DynamicConfigProperties(prefix = FwDynamicConst.SYSTEM_CONFIG_PREFIX)
 @ConfigurationProperties(prefix = "com.dobbinsoft.system")
 public class FwSystemProperties {
 

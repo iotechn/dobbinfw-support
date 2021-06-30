@@ -13,8 +13,7 @@ import org.springframework.stereotype.Component;
  * @date: 2021-04-13
  */
 @Data
-//@DynamicConfigProperties(prefix = FwDynamicConst.RATE_LIMITER_CONFIG_PREFIX)
-@Component
+@DynamicConfigProperties(prefix = FwDynamicConst.RATE_LIMITER_CONFIG_PREFIX)
 @ConfigurationProperties(prefix = "com.dobbinsoft.rate-limit")
 public class FwRateLimitProperties {
 

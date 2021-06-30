@@ -12,8 +12,7 @@ import org.springframework.stereotype.Component;
  * Time: 15:51
  */
 @Data
-//@DynamicConfigProperties(prefix = FwDynamicConst.SMS_CONFIG_PREFIX)
-@Component
+@DynamicConfigProperties(prefix = FwDynamicConst.SMS_CONFIG_PREFIX)
 @ConfigurationProperties(prefix = "com.dobbinsoft.sms")
 public class FwSMSProperties {
 
