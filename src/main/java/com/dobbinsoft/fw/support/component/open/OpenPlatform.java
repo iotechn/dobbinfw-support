@@ -4,12 +4,8 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.asymmetric.KeyType;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.TypeReference;
 import com.dobbinsoft.fw.support.component.open.exception.OpenPlatformException;
-import com.dobbinsoft.fw.support.component.open.model.OPClient;
-import com.dobbinsoft.fw.support.component.open.model.OPClientPermission;
-import com.dobbinsoft.fw.support.component.open.model.OPData;
-import com.dobbinsoft.fw.support.component.open.model.OPNotify;
+import com.dobbinsoft.fw.support.component.open.model.*;
 import com.squareup.okhttp.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +30,21 @@ public class OpenPlatform {
     protected OpenPlatformStorageStrategy openPlatformStorageStrategy;
 
     private OkHttpClient okHttpClient = new OkHttpClient();
+
+    private ThreadLocal<String> clientCodeThreadLocal = new ThreadLocal<>();
+
+
+    public void setClientCode(String clientCode) {
+        clientCodeThreadLocal.set(clientCode);
+    }
+
+    public String getClientCode() {
+        return clientCodeThreadLocal.get();
+    }
+
+    public void removeClientCode() {
+        clientCodeThreadLocal.remove();
+    }
 
     /**
      * 初始化客户端
@@ -135,7 +146,7 @@ public class OpenPlatform {
         int status = this.sendNotify(opNotify);
         opNotify.setStatus(status);
         if (status == 0) {
-            opNotify.setNextNotify(new Date(System.currentTimeMillis() + 1000l));
+            opNotify.setNextNotify(new Date(System.currentTimeMillis() + 3000l));
         } else {
             opNotify.setNextNotify(new Date());
         }
@@ -162,15 +173,15 @@ public class OpenPlatform {
                     .post(body).build())
                     .execute();
             if (responseBody.code() == 200) {
-                return 1;
+                return OPNotifyStatusType.OK.getCode();
             } else {
-                return 0;
+                return OPNotifyStatusType.FAIL.getCode();
             }
         } catch (IOException e) {
-            return 0;
+            return OPNotifyStatusType.FAIL.getCode();
         } catch (Exception e) {
             log.error("[发送通知] 异常", e);
-            return 0;
+            return OPNotifyStatusType.FAIL.getCode();
         }
     }
 
