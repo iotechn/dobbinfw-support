@@ -15,4 +15,9 @@ public class MockStorageClient implements StorageClient{
         result.setSuc(false);
         return result;
     }
+
+    @Override
+    public boolean delete(String url) {
+        return true;
+    }
 }

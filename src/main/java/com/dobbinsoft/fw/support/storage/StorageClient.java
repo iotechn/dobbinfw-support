@@ -11,4 +11,6 @@ public interface StorageClient {
 
     public StorageResult save(StorageRequest request);
 
+    public boolean delete(String url);
+
 }

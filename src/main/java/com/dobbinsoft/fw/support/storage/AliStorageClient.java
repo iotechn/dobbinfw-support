@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * ClassName: AliStorageClient
- * Description: TODO
+ * Description: 阿里云对象存储实现
  *
  * @author: e-weichaozheng
  * @date: 2021-03-17
@@ -47,5 +47,13 @@ public class AliStorageClient implements StorageClient, InitializingBean {
             result.setUrl(properties.getAliBaseUrl() + request.getPath() + "/" + request.getFilename());
         }
         return result;
+    }
+
+    @Override
+    public boolean delete(String url) {
+        int index = url.indexOf("/", 5);
+        String key = url.substring(index);
+        ossClient.deleteObject(properties.getAliBucket(), key);
+        return true;
     }
 }

@@ -23,7 +23,7 @@ public class LockComponent {
     @Autowired
     private StringRedisTemplate lockRedisTemplate;
 
-    @Autowired
+    @Autowired(required = false)
     private BeforeGetLockKey beforeGetLockKey;
 
     private static final String LOCK_PREFIX = "LOCK_PREFIX_";

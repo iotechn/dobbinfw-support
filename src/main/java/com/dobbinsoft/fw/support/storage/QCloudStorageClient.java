@@ -45,11 +45,18 @@ public class QCloudStorageClient implements StorageClient, InitializingBean {
                 properties.getQcloudBucket(),
                 request.getPath() + "/" + request.getFilename(),
                 request.getIs(), objectMetadata);
-        PutObjectResult putObjectResult = cosClient.putObject(putObjectRequest);
-
+        cosClient.putObject(putObjectRequest);
         StorageResult result = new StorageResult();
         result.setSuc(true);
         result.setUrl(properties.getQcloudBaseUrl() + request.getPath() + "/" + request.getFilename());
         return result;
+    }
+
+    @Override
+    public boolean delete(String url) {
+        int index = url.indexOf("/", 5);
+        String key = url.substring(index);
+        cosClient.deleteObject(properties.getQcloudBucket(), key);
+        return true;
     }
 }
