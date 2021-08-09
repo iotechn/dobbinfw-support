@@ -38,6 +38,9 @@ public class QueryWrapperAspect {
         Parameter[] parameters = method.getParameters();
         Object[] args = joinPoint.getArgs();
         QueryWrapper wrapper = new QueryWrapper();
+        if (query.select() != null && query.select().length > 0) {
+            wrapper.select(query.select());
+        }
         for (int i = 0; i < parameters.length; i++) {
             if (!ObjectUtils.isEmpty(args[i])) {
                 Parameter parameter = parameters[i];

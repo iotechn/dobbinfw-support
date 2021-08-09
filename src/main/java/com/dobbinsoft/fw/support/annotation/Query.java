@@ -23,4 +23,10 @@ public @interface Query {
      */
     public String[] sort() default {"id"};
 
+    /**
+     * 选择哪些字段
+     * @return
+     */
+    public String[] select() default {};
+
 }

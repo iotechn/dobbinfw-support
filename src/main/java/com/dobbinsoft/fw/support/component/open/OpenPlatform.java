@@ -6,8 +6,8 @@ import cn.hutool.crypto.asymmetric.KeyType;
 import com.alibaba.fastjson.JSONObject;
 import com.dobbinsoft.fw.support.component.open.exception.OpenPlatformException;
 import com.dobbinsoft.fw.support.component.open.model.*;
-import com.squareup.okhttp.*;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 

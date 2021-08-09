@@ -4,8 +4,8 @@ import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.asymmetric.KeyType;
 import com.alibaba.fastjson.JSONObject;
 import com.dobbinsoft.fw.support.component.open.model.OPData;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.RequestBody;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 
 public class OpenPlatformUtil {
 

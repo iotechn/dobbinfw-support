@@ -78,6 +78,12 @@
             <groupId>com.qcloud</groupId>
             <artifactId>cos_api</artifactId>
             <version>5.6.37</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.squareup.okhttp</groupId>
+                    <artifactId>logging-interceptor</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- mybatis plus 依赖 -->
@@ -128,14 +134,26 @@
             <groupId>com.tencentcloudapi</groupId>
             <artifactId>tencentcloud-sdk-java-common</artifactId>
             <version>3.1.310</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.squareup.okhttp</groupId>
+                    <artifactId>logging-interceptor</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
+        <!-- http 客户端 -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 	
 	<distributionManagement>
