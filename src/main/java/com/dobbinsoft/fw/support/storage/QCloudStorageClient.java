@@ -5,12 +5,12 @@ import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
 import com.qcloud.cos.auth.COSCredentials;
-import com.qcloud.cos.model.ObjectMetadata;
-import com.qcloud.cos.model.PutObjectRequest;
-import com.qcloud.cos.model.PutObjectResult;
+import com.qcloud.cos.model.*;
 import com.qcloud.cos.region.Region;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Date;
 
 /**
  * ClassName: QCloudStorageClient
@@ -53,10 +53,58 @@ public class QCloudStorageClient implements StorageClient, InitializingBean {
     }
 
     @Override
+    public StoragePrivateResult savePrivate(StorageRequest request) {
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setContentLength(request.getSize());
+        objectMetadata.setContentType(request.getContentType());
+        PutObjectRequest putObjectRequest = new PutObjectRequest(
+                properties.getQcloudBucket(),
+                request.getPath() + "/" + request.getFilename(),
+                request.getIs(), objectMetadata);
+        cosClient.putObject(putObjectRequest);
+        String key = request.getPath() + "/" + request.getFilename();
+        cosClient.setObjectAcl(this.properties.getQcloudBucket(), key, CannedAccessControlList.Private);
+        StoragePrivateResult result = new StoragePrivateResult();
+        result.setSuc(true);
+        result.setKey(key);
+        result.setUrl(this.getPrivateUrl(key, 120));
+        return result;
+    }
+
+    @Override
     public boolean delete(String url) {
         int index = url.indexOf("/", 5);
         String key = url.substring(index);
         cosClient.deleteObject(properties.getQcloudBucket(), key);
         return true;
     }
+
+    @Override
+    public boolean deletePrivate(String key) {
+        cosClient.deleteObject(properties.getQcloudBucket(), key);
+        return true;
+    }
+
+    @Override
+    public String getPrivateUrl(String key, Integer expireSec) {
+        return cosClient.generatePresignedUrl(properties.getQcloudBucket(), key, new Date(System.currentTimeMillis() + (1000L * expireSec))).toString();
+    }
+
+    @Override
+    public String getKeyFormUrl(String url) {
+        if (url.startsWith("http")) {
+            url = url.replace("http://", "").replace("https://", "");
+            int index = url.indexOf("/");
+            String substring = url.substring(index + 1);
+            int endIndex = substring.indexOf("?");
+            if (endIndex > 0) {
+                return substring.substring(0, endIndex);
+            } else {
+                return substring;
+            }
+        } else {
+            return url;
+        }
+    }
+
 }

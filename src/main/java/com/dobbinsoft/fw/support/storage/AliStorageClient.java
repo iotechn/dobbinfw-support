@@ -50,10 +50,30 @@ public class AliStorageClient implements StorageClient, InitializingBean {
     }
 
     @Override
+    public StoragePrivateResult savePrivate(StorageRequest request) {
+        throw new RuntimeException("不支持私有保存");
+    }
+
+    @Override
     public boolean delete(String url) {
         int index = url.indexOf("/", 5);
         String key = url.substring(index);
         ossClient.deleteObject(properties.getAliBucket(), key);
         return true;
+    }
+
+    @Override
+    public boolean deletePrivate(String key) {
+        throw new RuntimeException("不支持私有保存");
+    }
+
+    @Override
+    public String getPrivateUrl(String key, Integer expireSec) {
+        throw new RuntimeException("不支持私有保存");
+    }
+
+    @Override
+    public String getKeyFormUrl(String url) {
+        throw new RuntimeException("不支持私有保存");
     }
 }

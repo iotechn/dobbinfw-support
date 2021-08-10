@@ -11,6 +11,14 @@ public interface StorageClient {
 
     public StorageResult save(StorageRequest request);
 
+    public StoragePrivateResult savePrivate(StorageRequest request);
+
     public boolean delete(String url);
+
+    public boolean deletePrivate(String key);
+
+    public String getPrivateUrl(String key, Integer expireSec);
+
+    public String getKeyFormUrl(String url);
 
 }

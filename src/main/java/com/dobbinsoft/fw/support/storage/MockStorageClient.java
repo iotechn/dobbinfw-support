@@ -17,7 +17,29 @@ public class MockStorageClient implements StorageClient{
     }
 
     @Override
+    public StoragePrivateResult savePrivate(StorageRequest request) {
+        StoragePrivateResult result = new StoragePrivateResult();
+        result.setSuc(false);
+        return result;
+    }
+
+    @Override
     public boolean delete(String url) {
         return true;
+    }
+
+    @Override
+    public boolean deletePrivate(String key) {
+        return true;
+    }
+
+    @Override
+    public String getPrivateUrl(String key, Integer expireSec) {
+        throw new RuntimeException("不支持私有保存");
+    }
+
+    @Override
+    public String getKeyFormUrl(String url) {
+        throw new RuntimeException("不支持私有保存");
     }
 }
