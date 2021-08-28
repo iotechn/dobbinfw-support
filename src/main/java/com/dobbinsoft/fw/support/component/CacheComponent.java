@@ -25,6 +25,11 @@ public class CacheComponent {
     private BeforeGetCacheKey beforeGetCacheKey;
 
     /**
+     * 用于描述一系列的 将要执行的 Redis （写）操作
+     */
+    private ThreadLocal<CacheContext> contextThreadLocal = new ThreadLocal<>();
+
+    /**
      * 放入不过期不序列化缓存
      *
      * @param key
@@ -309,6 +314,23 @@ public class CacheComponent {
     }
 
     /**
+     * 从有序集合中获取数据
+     *
+     * @param setName
+     * @param isAsc
+     * @return
+     */
+    public Set<String> getZSetList(String setName, boolean isAsc) {
+        String key = getKey(setName);
+        Long size = stringRedisTemplate.opsForZSet().size(key);
+        if (isAsc) {
+            return stringRedisTemplate.opsForZSet().range(key, 0, size);
+        } else {
+            return stringRedisTemplate.opsForZSet().reverseRange(key, 0, size);
+        }
+    }
+
+    /**
      * 设置Lru，最后进来的排最前面
      * @param setName
      * @param value
@@ -435,6 +457,19 @@ public class CacheComponent {
             return beforeGetCacheKey.getKey(key);
         }
         return key;
+    }
+
+    /**
+     * 获取缓存上下文
+     * @return
+     */
+    public CacheContext getCacheContext() {
+        CacheContext cacheContext = this.contextThreadLocal.get();
+        if (cacheContext == null) {
+            cacheContext = new CacheContext();
+            this.contextThreadLocal.set(cacheContext);
+        }
+        return cacheContext;
     }
 
 }

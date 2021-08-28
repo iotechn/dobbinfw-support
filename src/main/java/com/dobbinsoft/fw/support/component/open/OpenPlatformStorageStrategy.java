@@ -63,4 +63,10 @@ public interface OpenPlatformStorageStrategy {
      */
     public boolean updateNotify(OPNotify updateNotify);
 
+    /**
+     * 是否自定义最大努力通知
+     * @return
+     */
+    public boolean customTryNotify();
+
 }

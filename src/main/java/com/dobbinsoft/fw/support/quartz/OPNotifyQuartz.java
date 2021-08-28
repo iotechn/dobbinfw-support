@@ -33,18 +33,20 @@ public class OPNotifyQuartz {
      */
     @Scheduled(fixedRate = 1)
     public void tryNotify() {
-        List<OPNotify> needNotify = openPlatformStorageStrategy.getNeedNotify();
-        for (OPNotify notify : needNotify) {
-            try {
-                int res = openPlatform.sendNotify(notify);
-                OPNotify opNotify = new OPNotify();
-                opNotify.setNextNotify(new Date(1000L * 60 * (long) Math.pow(2, notify.getTimes())));
-                opNotify.setTimes(notify.getTimes() + 1);
-                opNotify.setStatus(res);
-                opNotify.setId(notify.getId());
-                openPlatformStorageStrategy.updateNotify(opNotify);
-            } catch (Exception e) {
-                log.error("[最大努力通知 定时任务] Item异常", e);
+        if (!openPlatformStorageStrategy.customTryNotify()) {
+            List<OPNotify> needNotify = openPlatformStorageStrategy.getNeedNotify();
+            for (OPNotify notify : needNotify) {
+                try {
+                    int res = openPlatform.sendNotify(notify);
+                    OPNotify opNotify = new OPNotify();
+                    opNotify.setNextNotify(new Date(1000L * 60 * (long) Math.pow(2, notify.getTimes())));
+                    opNotify.setTimes(notify.getTimes() + 1);
+                    opNotify.setStatus(res);
+                    opNotify.setId(notify.getId());
+                    openPlatformStorageStrategy.updateNotify(opNotify);
+                } catch (Exception e) {
+                    log.error("[最大努力通知 定时任务] Item异常", e);
+                }
             }
         }
     }
