@@ -23,7 +23,7 @@ public class DynamicConfigAspect {
     @Autowired
     private DynamicConfigComponent dynamicConfigComponent;
 
-    @Pointcut("execution(public * com.dobbinsoft.fw.*.properties.*.get*())")
+    @Pointcut("@within(com.dobbinsoft.fw.support.annotation.DynamicConfigProperties)")
     public void cachePointCut() {}
 
     /**
@@ -37,17 +37,19 @@ public class DynamicConfigAspect {
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature signature = (MethodSignature)joinPoint.getSignature();
         DynamicConfigProperties annotation = (DynamicConfigProperties)signature.getDeclaringType().getAnnotation(DynamicConfigProperties.class);
-        String prefix = annotation.prefix();
-        // 去对应的分组读取配置
-        Class returnType = signature.getReturnType();
-        if (returnType == String.class) {
-            return dynamicConfigComponent.readString(prefix + ReflectUtil.getField(signature.getName()), null);
-        } else if (returnType == Integer.class) {
-            return dynamicConfigComponent.readInt(prefix + ReflectUtil.getField(signature.getName()), null);
-        } else if (returnType == Long.class) {
-            return dynamicConfigComponent.readLong(prefix + ReflectUtil.getField(signature.getName()), null);
-        } else if (returnType == Boolean.class) {
-            return dynamicConfigComponent.readBoolean(prefix + ReflectUtil.getField(signature.getName()), null);
+        if (annotation != null) {
+            String prefix = annotation.prefix();
+            // 去对应的分组读取配置
+            Class returnType = signature.getReturnType();
+            if (returnType == String.class) {
+                return dynamicConfigComponent.readString(prefix + ReflectUtil.getField(signature.getName()), null);
+            } else if (returnType == Integer.class) {
+                return dynamicConfigComponent.readInt(prefix + ReflectUtil.getField(signature.getName()), null);
+            } else if (returnType == Long.class) {
+                return dynamicConfigComponent.readLong(prefix + ReflectUtil.getField(signature.getName()), null);
+            } else if (returnType == Boolean.class) {
+                return dynamicConfigComponent.readBoolean(prefix + ReflectUtil.getField(signature.getName()), null);
+            }
         }
         return joinPoint.proceed();
     }

@@ -11,6 +11,8 @@ public class FwDynamicConst {
 
     public static final String WX_APP_CONFIG_PREFIX = "WX_APP_CONFIG:";
 
+    public static final String ALI_APP_CONFIG_PREFIX = "ALI_APP_CONFIG:";
+
     public static final String WX_PAY_CONFIG_PREFIX = "WX_PAY_CONFIG:";
 
     public static final String SMS_CONFIG_PREFIX = "SMS_CONFIG:";

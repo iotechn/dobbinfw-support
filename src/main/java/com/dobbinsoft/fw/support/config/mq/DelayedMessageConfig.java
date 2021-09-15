@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
  * @author: e-weichaozheng
  * @date: 2021-03-18
  */
-@Configuration
 public class DelayedMessageConfig {
 
     @Bean

@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Aspect
-@Component
+//@Aspect
+//@Component
 public class CacheMapperAspect {
 
     @Autowired

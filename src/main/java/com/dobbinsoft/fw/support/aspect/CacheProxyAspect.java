@@ -18,8 +18,8 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 
-@Aspect
-@Component
+//@Aspect
+//@Component
 public class CacheProxyAspect {
 
     @Autowired
