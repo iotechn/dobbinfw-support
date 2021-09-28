@@ -48,7 +48,7 @@ public class QCloudStorageClient implements StorageClient, InitializingBean {
         cosClient.putObject(putObjectRequest);
         StorageResult result = new StorageResult();
         result.setSuc(true);
-        result.setUrl(properties.getQcloudBaseUrl() + request.getPath() + "/" + request.getFilename());
+        result.setUrl(properties.getQcloudBaseUrl() + "/" + request.getPath() + "/" + request.getFilename());
         return result;
     }
 
