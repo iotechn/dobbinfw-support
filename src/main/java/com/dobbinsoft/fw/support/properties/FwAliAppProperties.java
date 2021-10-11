@@ -26,6 +26,8 @@ public class FwAliAppProperties {
 
     private String miniAppPrivateKey2;
 
+    private String miniNotifyUrl;
+
     private String appId;
 
     private String appPublicKey1;
@@ -33,5 +35,17 @@ public class FwAliAppProperties {
     private String appPublicKey2;
 
     private String appPrivateKey2;
+
+    private String appNotifyUrl;
+
+    private String webAppId;
+
+    private String webAppPublicKey1;
+
+    private String webAppPublicKey2;
+
+    private String webAppPrivateKey2;
+
+    private String webNotifyUrl;
 
 }

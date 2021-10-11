@@ -6,11 +6,19 @@ import com.alibaba.fastjson.JSONObject;
 import com.dobbinsoft.fw.support.component.open.model.OPData;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
+import org.springframework.util.ObjectUtils;
 
 public class OpenPlatformUtil {
 
     public static RequestBody buildBody(String data, String clientCode, String privateKey) {
-        data += "&optimestamp=";
+        if (ObjectUtils.isEmpty(clientCode) || ObjectUtils.isEmpty(privateKey)) {
+            throw new NullPointerException("clientCode 与 privateKey 不能为空");
+        }
+        if (ObjectUtils.isEmpty(data)) {
+            data = "optimestamp=";
+        } else {
+            data += "&optimestamp=";
+        }
         data += System.currentTimeMillis();
         MediaType mediaType = MediaType.parse("application/json");
         String ciphertext = SecureUtil.rsa(privateKey,

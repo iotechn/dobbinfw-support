@@ -241,6 +241,18 @@ public class CacheComponent {
     }
 
     /**
+     * 批量获取Hash值 列表
+     *
+     * @param key
+     * @param hashNameCollection
+     * @return
+     */
+    public List<String> getHashMultiAsRawList(String key, Collection hashNameCollection) {
+        List<String> list = stringRedisTemplate.opsForHash().multiGet(getKey(key), hashNameCollection);
+        return list;
+    }
+
+    /**
      * 删除Hash值
      *
      * @param hashName
