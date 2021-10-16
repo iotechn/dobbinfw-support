@@ -39,6 +39,26 @@ public class LockComponent {
         return lockRedisTemplate.opsForValue().setIfAbsent(LOCK_PREFIX + getKey(key), System.currentTimeMillis() + "", Duration.ofSeconds(timeoutSec));
     }
 
+    /**
+     * 阻塞获取锁
+     *
+     * @param key
+     * @param timeoutSec
+     * @return
+     */
+    public boolean lockBlock(String key, Integer timeoutSec) {
+        boolean res;
+        long startTime = System.currentTimeMillis();
+        do {
+            res = lockRedisTemplate.opsForValue().setIfAbsent(LOCK_PREFIX + getKey(key),  startTime+ "", Duration.ofSeconds(timeoutSec));
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+            }
+        } while (!res && ((System.currentTimeMillis() - startTime) / 1000 > timeoutSec));
+        return res;
+    }
+
     public boolean tryLockMulti(Collection<String> keys, Integer timeoutSec) {
         Map<String, String> map = new HashMap<>();
         String now = System.currentTimeMillis() + "";
