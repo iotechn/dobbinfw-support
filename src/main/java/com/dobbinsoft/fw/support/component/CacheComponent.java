@@ -117,37 +117,37 @@ public class CacheComponent {
     /**
      * 将值放入Hash里
      *
-     * @param hashName
      * @param key
+     * @param hashKey
      * @param value
      */
-    public void putHashRaw(String hashName, String key, String value) {
-        stringRedisTemplate.opsForHash().put(hashName, getKey(key), value);
+    public void putHashRaw(String key, String hashKey, String value) {
+        stringRedisTemplate.opsForHash().put(getKey(key), hashKey, value);
     }
 
     /**
      * 设置Hash对象，进行序列化
      *
-     * @param hashName
      * @param key
+     * @param hashKey
      * @param obj
      */
-    public void putHashObj(String hashName, String key, Object obj) {
-        stringRedisTemplate.opsForHash().put(hashName, getKey(key), JSONObject.toJSONString(obj));
+    public void putHashObj(String key, String hashKey, Object obj) {
+        stringRedisTemplate.opsForHash().put(getKey(key), hashKey, JSONObject.toJSONString(obj));
     }
 
     /**
      * 设置Hash对象，进行序列化
      *
-     * @param hashName
      * @param key
+     * @param hashKey
      * @param obj
      * @param expireSec
      */
-    public void putHashObj(String hashName, String key, Object obj, Integer expireSec) {
+    public void putHashObj(String key, String hashKey, Object obj, Integer expireSec) {
         String k = getKey(key);
         boolean hasKey = stringRedisTemplate.hasKey(k);
-        stringRedisTemplate.opsForHash().put(hashName, k, JSONObject.toJSONString(obj));
+        stringRedisTemplate.opsForHash().put(k, hashKey, JSONObject.toJSONString(obj));
         if (!hasKey) {
             stringRedisTemplate.expire(k, expireSec, TimeUnit.SECONDS);
         }
@@ -156,36 +156,36 @@ public class CacheComponent {
     /**
      * 增加Hash表中键的字面数值
      *
-     * @param hashName
      * @param key
+     * @param hashKey
      * @param delta
      * @return
      */
-    public long incrementHashKey(String hashName, String key, long delta) {
-        return stringRedisTemplate.opsForHash().increment(hashName, getKey(key), delta);
+    public long incrementHashKey(String key, String hashKey, long delta) {
+        return stringRedisTemplate.opsForHash().increment(getKey(key), hashKey, delta);
     }
 
     /**
      * 减少Hash表中字面的数值
      *
-     * @param hashName
      * @param key
+     * @param hashKey
      * @param delta
      * @return
      */
-    public long decrementHashKey(String hashName, String key, long delta) {
-        return stringRedisTemplate.opsForHash().increment(hashName, getKey(key), -delta);
+    public long decrementHashKey(String key, String hashKey, long delta) {
+        return stringRedisTemplate.opsForHash().increment(getKey(key), hashKey, -delta);
     }
 
     /**
      * 获取Hash值，不进行序列化
      *
-     * @param hashName
      * @param key
+     * @param hashKey
      * @return
      */
-    public String getHashRaw(String hashName, String key) {
-        String o = (String) stringRedisTemplate.opsForHash().get(hashName, getKey(key));
+    public String getHashRaw(String key, String hashKey) {
+        String o = (String) stringRedisTemplate.opsForHash().get(getKey(key), hashKey);
         if (StringUtils.isEmpty(o)) {
             return null;
         }
@@ -195,14 +195,14 @@ public class CacheComponent {
     /**
      * 获取Hash值，带反序列化
      *
-     * @param hashName
      * @param key
+     * @param hashKey
      * @param clazz
      * @param <T>
      * @return
      */
-    public <T> T getHashObj(String hashName, String key, Class<T> clazz) {
-        String o = (String) stringRedisTemplate.opsForHash().get(hashName, getKey(key));
+    public <T> T getHashObj(String key, String hashKey, Class<T> clazz) {
+        String o = (String) stringRedisTemplate.opsForHash().get(getKey(key), hashKey);
         if (StringUtils.isEmpty(o)) {
             return null;
         }
@@ -212,14 +212,14 @@ public class CacheComponent {
     /**
      * 获取Hash值，以数组的形式反序列化
      *
-     * @param hashName
      * @param key
+     * @param hashKey
      * @param clazz
      * @param <T>
      * @return
      */
-    public <T> List<T> getHashList(String hashName, String key, Class<T> clazz) {
-        String o = (String) stringRedisTemplate.opsForHash().get(hashName, getKey(key));
+    public <T> List<T> getHashList(String key, String hashKey, Class<T> clazz) {
+        String o = (String) stringRedisTemplate.opsForHash().get(getKey(key), hashKey);
         if (StringUtils.isEmpty(o)) {
             return null;
         }
@@ -230,13 +230,13 @@ public class CacheComponent {
      * 批量获取Hash表里面的值
      *
      * @param key 桶的名字
-     * @param hashNameCollection String类型键集合 Collection<String>
+     * @param hashKeys String类型键集合 Collection<String>
      * @param clazz
      * @param <T>
      * @return
      */
-    public <T> List<T> getHashMultiAsList(String key, Collection hashNameCollection, Class<T> clazz) {
-        List<String> list = stringRedisTemplate.opsForHash().multiGet(getKey(key), hashNameCollection);
+    public <T> List<T> getHashMultiAsList(String key, Collection hashKeys, Class<T> clazz) {
+        List<String> list = stringRedisTemplate.opsForHash().multiGet(getKey(key), hashKeys);
         return list.stream().map(item -> JSONObject.parseObject(item, clazz)).collect(Collectors.toList());
     }
 
@@ -244,22 +244,22 @@ public class CacheComponent {
      * 批量获取Hash值 列表
      *
      * @param key
-     * @param hashNameCollection
+     * @param hashKeys
      * @return
      */
-    public List<String> getHashMultiAsRawList(String key, Collection hashNameCollection) {
-        List<String> list = stringRedisTemplate.opsForHash().multiGet(getKey(key), hashNameCollection);
+    public List<String> getHashMultiAsRawList(String key, Collection hashKeys) {
+        List<String> list = stringRedisTemplate.opsForHash().multiGet(getKey(key), hashKeys);
         return list;
     }
 
     /**
      * 删除Hash值
      *
-     * @param hashName
      * @param key
+     * @param hashKey
      */
-    public void delHashKey(String hashName, String key) {
-        stringRedisTemplate.opsForHash().delete(hashName, getKey(key));
+    public void delHashKey(String key, String hashKey) {
+        stringRedisTemplate.opsForHash().delete(getKey(key), hashKey);
     }
 
     public void putHashAll(String key, Map<String, String> map, Integer expireSec) {
@@ -469,6 +469,15 @@ public class CacheComponent {
             return beforeGetCacheKey.getKey(key);
         }
         return key;
+    }
+
+    public Collection<String> getKeys(Collection<String> keys) {
+        if (beforeGetCacheKey != null) {
+            return keys.stream().map(item -> {
+                return beforeGetCacheKey.getKey(item);
+            }).collect(Collectors.toList());
+        }
+        return keys;
     }
 
     /**
