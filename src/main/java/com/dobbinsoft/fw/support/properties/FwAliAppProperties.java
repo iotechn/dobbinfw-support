@@ -48,4 +48,6 @@ public class FwAliAppProperties {
 
     private String webNotifyUrl;
 
+    private String webReturnUrl;
+
 }
