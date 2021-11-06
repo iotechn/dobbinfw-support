@@ -1,5 +1,6 @@
 package com.dobbinsoft.fw.support.config.captcha;
 
+import com.dobbinsoft.fw.support.captcha.AjOpenSourceFwCaptchaClient;
 import com.dobbinsoft.fw.support.captcha.FwCaptchaClient;
 import com.dobbinsoft.fw.support.captcha.QCloudFwCaptchaClient;
 import com.dobbinsoft.fw.support.properties.FwCaptchaProperties;
@@ -16,6 +17,8 @@ public class CaptchaConfig {
         String enable = captchaProperties.getEnable();
         if ("qcloud".equals(enable)) {
             return new QCloudFwCaptchaClient();
+        } else if ("aj".equals(enable)) {
+            return new AjOpenSourceFwCaptchaClient();
         }
         return null;
     }

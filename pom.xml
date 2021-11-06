@@ -142,6 +142,13 @@
 <!--            </exclusions>-->
         </dependency>
 
+        <!-- anji 验证码 -->
+        <dependency>
+            <groupId>com.anji-plus</groupId>
+            <artifactId>spring-boot-starter-captcha</artifactId>
+            <version>1.3.0</version>
+        </dependency>
+
         <!-- http 客户端 -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>

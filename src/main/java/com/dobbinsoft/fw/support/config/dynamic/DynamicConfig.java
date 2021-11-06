@@ -44,46 +44,5 @@ public class DynamicConfig {
     public DynamicConfigAspect dynamicConfigAspect() {
         return new DynamicConfigAspect();
     }
-//
-//    /** 框架给出的常用配置 **/
-//    @Bean
-//    public FwAdminNotifyProperties fwAdminNotifyProperties() {
-//        return new FwAdminNotifyProperties();
-//    }
-//
-//    @Bean
-//    public FwObjectStorageProperties fwObjectStorageProperties() {
-//        return new FwObjectStorageProperties();
-//    }
-//
-//    @Bean
-//    public FwRateLimitProperties fwRateLimitProperties() {
-//        return new FwRateLimitProperties();
-//    }
-//
-//    @Bean
-//    public FwReliableMQProperties fwReliableMQProperties() {
-//        return new FwReliableMQProperties();
-//    }
-//
-//    @Bean
-//    public FwSMSProperties fwSMSProperties() {
-//        return new FwSMSProperties();
-//    }
-//
-//    @Bean
-//    public FwSystemProperties fwSystemProperties() {
-//        return new FwSystemProperties();
-//    }
-//
-//    @Bean
-//    public FwWxAppProperties fwWxAppProperties() {
-//        return new FwWxAppProperties();
-//    }
-//
-//    @Bean
-//    public FwWxPayProperties fwWxPayProperties() {
-//        return new FwWxPayProperties();
-//    }
 
 }
