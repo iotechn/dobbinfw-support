@@ -36,7 +36,7 @@ public class RedisNotifyDelayedMessageQueueImpl implements DelayedMessageQueue {
         throw new RuntimeException();
     }
 
-    private String assembleKey(Integer code, String value){
+    public String assembleKey(Integer code, String value){
         if(value == null){
             value = "";
         }

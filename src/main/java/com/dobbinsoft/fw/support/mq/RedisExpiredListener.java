@@ -18,7 +18,7 @@ public class RedisExpiredListener implements MessageListener, ApplicationContext
      * 并不能得到value, 只能得到key。
      * 姑且理解为: redis服务在key失效时(或失效后)通知到java服务某个key失效了, 那么在java中不可能得到这个redis-key对应的redis-value。
      */
-    private HashMap<Integer, DelayedMessageHandler> handlerRouter;
+    protected HashMap<Integer, DelayedMessageHandler> handlerRouter;
 
     private static final Logger logger = LoggerFactory.getLogger(RedisExpiredListener.class);
 

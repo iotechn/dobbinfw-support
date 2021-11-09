@@ -36,6 +36,9 @@ public class TableInit extends AbstractMethod {
         sb.append("`id` bigint(20) NOT NULL AUTO_INCREMENT,\n");
         for (Field field : declaredFields) {
             Class<?> fieldType = field.getType();
+            if (field.getName().equals("id") || field.getName().equals("gmtUpdate") || field.getName().equals("gmtCreate")) {
+                continue;
+            }
             if (fieldType == Long.class) {
                 sb.append("`");
                 sb.append(StrUtil.toUnderlineCase(field.getName()));
