@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * ClassName: OPQuartz
- * Description: TODO
+ * Description: 开放平台通知定时任务
  *
  * @author: e-weichaozheng
  * @date: 2021-04-25

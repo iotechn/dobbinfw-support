@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * ClassName: MockStorageClient
- * Description: MockStorageClient
+ * Description: 模拟存储实现
  *
  * @author: e-weichaozheng
  * @date: 2021-03-17

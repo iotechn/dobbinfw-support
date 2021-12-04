@@ -4,7 +4,7 @@ import com.dobbinsoft.fw.core.annotation.HttpMethod;
 
 /**
  * ClassName: RateLimiter
- * Description: TODO
+ * Description: 浏览限制器
  *
  * @author: e-weichaozheng
  * @date: 2021-04-12
