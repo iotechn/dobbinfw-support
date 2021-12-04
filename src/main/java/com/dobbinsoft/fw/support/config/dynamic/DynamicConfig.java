@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * ClassName: DynamicConfig
- * Description: TODO
+ * Description: 动态配置
  *
  * @author: e-weichaozheng
  * @date: 2021-05-20

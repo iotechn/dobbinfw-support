@@ -7,7 +7,7 @@ import java.util.Date;
 
 /**
  * ClassName: FwMetaObjectHandler
- * Description: TODO
+ * Description: 自动完善基础字段
  *
  * @author: e-weichaozheng
  * @date: 2021-03-30

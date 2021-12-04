@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * ClassName: FwSqlInjector
- * Description: TODO
+ * Description: 配置SQL注入器
  *
  * @author: e-weichaozheng
  * @date: 2021-03-29
