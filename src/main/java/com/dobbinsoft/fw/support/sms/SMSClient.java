@@ -16,5 +16,4 @@ public interface SMSClient {
 
     public SMSResult sendAdminLoginVerify(String phone, String verifyCode) throws ServiceException;
 
-
 }

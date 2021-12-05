@@ -1,7 +1,7 @@
 package com.dobbinsoft.fw.support.config.rate;
 
 import com.dobbinsoft.fw.support.properties.FwRateLimitProperties;
-import com.dobbinsoft.fw.support.rate.RateLimitRedisSlidingWindow;
+import com.dobbinsoft.fw.support.rate.RateLimiterRedisSlidingWindow;
 import com.dobbinsoft.fw.support.rate.RateLimiter;
 import com.dobbinsoft.fw.support.rate.RateLimiterNone;
 import com.dobbinsoft.fw.support.rate.RateLimiterRedisCount;
@@ -27,7 +27,7 @@ public class RateLimiterConfig {
         if ("count".equals(properties.getEnable())) {
             return new RateLimiterRedisCount();
         } else if ("sliding".equals(properties.getEnable())) {
-            return new RateLimitRedisSlidingWindow();
+            return new RateLimiterRedisSlidingWindow();
         } else {
 //            return new RateLimitRedisSlidingWindow();
             return new RateLimiterNone();

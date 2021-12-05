@@ -14,14 +14,14 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * ClassName: RateLimitRedisSlidingWindow
+ * ClassName: RateLimiterRedisSlidingWindow
  * Description: Redis 实现 滑动窗口 限流器
  *
  * @author: e-weichaozheng
  * @date: 2021-04-12
  */
 @Slf4j
-public class RateLimitRedisSlidingWindow implements RateLimiter {
+public class RateLimiterRedisSlidingWindow implements RateLimiter {
 
     @Autowired
     private StringRedisTemplate lockRedisTemplate;

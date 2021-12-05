@@ -33,7 +33,7 @@ mvn install -Dmaven.test.skip=true
 
 ##### PS. 请注意
 
-请确认已经引入fw-core，[请参照项目](/iotechn/dobbinfw-core) 
+请确认已经引入fw-core，[请参照项目](../dobbinfw-core) 
 
 #### 三、功能列表 & 文档索引
 
@@ -43,7 +43,7 @@ mvn install -Dmaven.test.skip=true
 
 3.3. 延迟队列(DelayedMQ)
 
-[3.4. 开放平台(OpenPlatform)](/iotechn/dobbinfw-support/doc/01.open.md)
+[3.4. 开放平台(OpenPlatform)](./doc/04.open.md)
 
 3.5. 数据库扩展(DB)
 

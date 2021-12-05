@@ -13,22 +13,22 @@ public class RedisNotifyDelayedMessageQueueImpl implements DelayedMessageQueue {
 
     @Override
     public Boolean publishTask(Integer code, String value, Integer delay) {
-        if(delay < 0){
+        if (delay < 0) {
             delay = 1;
         }
-        cacheComponent.putRaw(assembleKey(code,value),"",delay);
+        cacheComponent.putRaw(assembleKey(code, value), "", delay);
         return true;
     }
 
     @Override
     public Boolean deleteTask(Integer code, String value) {
-        cacheComponent.del(assembleKey(code,value));
+        cacheComponent.del(assembleKey(code, value));
         return true;
     }
 
     @Override
     public Long getTaskTime(Integer code, String value) {
-        return cacheComponent.getKeyExpire(assembleKey(code,value));
+        return cacheComponent.getKeyExpire(assembleKey(code, value));
     }
 
     @Override
@@ -36,8 +36,8 @@ public class RedisNotifyDelayedMessageQueueImpl implements DelayedMessageQueue {
         throw new RuntimeException();
     }
 
-    public String assembleKey(Integer code, String value){
-        if(value == null){
+    public String assembleKey(Integer code, String value) {
+        if (value == null) {
             value = "";
         }
         StringBuilder sb = new StringBuilder("TASK:");
