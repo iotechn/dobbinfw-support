@@ -37,27 +37,27 @@ mvn install -Dmaven.test.skip=true
 
 #### 三、功能列表 & 文档索引
 
-3.1. 用户&管理员会话(Session) 
+[3.1. 用户&管理员会话(Session)](./doc/01.session.md) 
 
-3.2. 动态配置(Dynamic)
+[3.2. 动态配置(Dynamic)](./doc/02.dynamic.md)
 
-3.3. 延迟队列(DelayedMQ)
+[3.3. 延迟队列(DelayedMQ)](./doc/03.delayed.md)
 
 [3.4. 开放平台(OpenPlatform)](./doc/04.open.md)
 
-3.5. 数据库扩展(DB)
+[3.5. 数据库扩展(DB)](./doc/05.db.md)
 
-3.6. 缓存(Cache)
+[3.6. 缓存(Cache)](./doc/06.cache.md)
 
-3.7. 分布式锁(Lock)
+[3.7. 分布式锁(Lock)](./doc/07.lock.md)
 
-3.8. 限流(Rate)
+[3.8. 限流(Rate)](./doc/08.rate.md)
 
-3.9. 滑动验证码(Captcha)
+[3.9. 滑动验证码(Captcha)](./doc/09.captcha.md)
 
-3.10. 短信(Sms)
+[3.10. 短信(Sms)](./doc/10.sms.md)
 
-3.11. 对象存储(Storage)
+[3.11. 对象存储(Storage)](./doc/11.storage.md)
 
 
 #### 四、贡献 & 社区
