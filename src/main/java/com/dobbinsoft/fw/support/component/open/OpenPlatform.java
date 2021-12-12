@@ -143,6 +143,7 @@ public class OpenPlatform {
         OPNotify opNotify = new OPNotify();
         opNotify.setParams(paramsRawList);
         opNotify.setClientCode(clientCode);
+        opNotify.setTimes(1);
         int status = this.sendNotify(opNotify);
         opNotify.setStatus(status);
         if (status == 0) {

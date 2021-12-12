@@ -50,4 +50,16 @@ public class FwAliAppProperties {
 
     private String webReturnUrl;
 
+    private String wapAppId;
+
+    private String wapAppPublicKey1;
+
+    private String wapAppPublicKey2;
+
+    private String wapAppPrivateKey2;
+
+    private String wapNotifyUrl;
+
+    private String wapReturnUrl;
+
 }
