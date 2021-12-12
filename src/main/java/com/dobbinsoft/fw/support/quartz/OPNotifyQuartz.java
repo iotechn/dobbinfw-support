@@ -39,7 +39,7 @@ public class OPNotifyQuartz {
                 try {
                     int res = openPlatform.sendNotify(notify);
                     OPNotify opNotify = new OPNotify();
-                    opNotify.setNextNotify(new Date(1000L * 60 * (long) Math.pow(2, notify.getTimes())));
+                    opNotify.setNextNotify(new Date(System.currentTimeMillis() + 1000L * 60 * (long) Math.pow(2, notify.getTimes())));
                     opNotify.setTimes(notify.getTimes() + 1);
                     opNotify.setStatus(res);
                     opNotify.setId(notify.getId());
