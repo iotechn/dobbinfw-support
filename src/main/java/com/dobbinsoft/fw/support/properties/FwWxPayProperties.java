@@ -24,4 +24,6 @@ public class FwWxPayProperties {
 
     private String keyPath;
 
+    private String keyContent;
+
 }
