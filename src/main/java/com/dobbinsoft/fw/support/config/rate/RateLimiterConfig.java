@@ -11,10 +11,8 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * ClassName: RateLimiterConfig
- * Description: TODO
+ * Description: 接口级别限流器实现
  *
- * @author: e-weichaozheng
- * @date: 2021-04-13
  */
 @Configuration
 public class RateLimiterConfig {

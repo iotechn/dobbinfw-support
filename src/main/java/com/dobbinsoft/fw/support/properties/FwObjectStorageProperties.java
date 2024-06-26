@@ -1,9 +1,8 @@
 package com.dobbinsoft.fw.support.properties;
 
-import com.dobbinsoft.fw.support.annotation.DynamicConfigProperties;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * Description:
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Component;
  * Time: 15:42
  */
 @Data
-@DynamicConfigProperties(prefix = FwDynamicConst.OSS_CONFIG_PREFIX)
+@Configuration
 @ConfigurationProperties(prefix = "com.dobbinsoft.oss")
 public class FwObjectStorageProperties {
 

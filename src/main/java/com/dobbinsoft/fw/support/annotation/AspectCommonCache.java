@@ -23,14 +23,14 @@ public @interface AspectCommonCache {
     int[] argIndex() default {};
 
     /**
-     * 需要反序列化为List泛型才需要传入。否则会自动格式化为 List<JSONObject> 是不影响
-     * @return
+     * <p>需要反序列化为List泛型才需要传入。否则会自动格式化为List《Map》是不影响</p>
+     * @return <p>返回</p>
      */
     Class arrayClass() default Object.class;
 
     /**
-     * 小于0代表不过期
-     * @return
+     * <p>小于0代表不过期</p>
+     * @return <p>返回</p>
      */
     int second() default 60 * 60 * 24;
 

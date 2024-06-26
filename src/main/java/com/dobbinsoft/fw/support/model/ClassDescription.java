@@ -8,9 +8,6 @@ import java.util.Map;
 /**
  * ClassName: ClassDescription
  * Description: 类文件描述
- *
- * @author: e-weichaozheng
- * @date: 2021-05-25
  */
 @Data
 public class ClassDescription implements Serializable {

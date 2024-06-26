@@ -8,8 +8,8 @@ import lombok.Data;
 @Data
 public class SMSResult {
 
-    private boolean succ;
+    private boolean success;
 
-    private String msg;
+    private String message;
 
 }

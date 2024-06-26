@@ -1,19 +1,15 @@
 package com.dobbinsoft.fw.support.properties;
 
-import com.dobbinsoft.fw.support.annotation.DynamicConfigProperties;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * ClassName: FwRateLimitProperties
- * Description: TODO
- *
- * @author: e-weichaozheng
- * @date: 2021-04-13
+ * Description: 限流配置配置
  */
 @Data
-@DynamicConfigProperties(prefix = FwDynamicConst.RATE_LIMITER_CONFIG_PREFIX)
+@Configuration
 @ConfigurationProperties(prefix = "com.dobbinsoft.rate-limit")
 public class FwRateLimitProperties {
 

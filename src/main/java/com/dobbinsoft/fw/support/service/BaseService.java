@@ -8,9 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 /**
  * ClassName: BaseService
  * Description: 基础服务类，用于统一扩展
- *
- * @author: e-weichaozheng
- * @date: 2021-03-17
+ * @param <U> 前台用户类型
+ * @param <A> 后台用户类型
  */
 public class BaseService<U extends IdentityOwner, A extends PermissionOwner> {
 

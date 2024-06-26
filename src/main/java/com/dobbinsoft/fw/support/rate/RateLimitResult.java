@@ -5,9 +5,6 @@ import lombok.Data;
 /**
  * ClassName: RateLimitResult
  * Description: 限流结果实例
- *
- * @author: e-weichaozheng
- * @date: 2021-04-12
  */
 @Data
 public class RateLimitResult {

@@ -1,5 +1,6 @@
 package com.dobbinsoft.fw.support.component;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeUnit;
  * Date: 2019-02-07
  * Time: 上午11:40
  */
+@Slf4j
 @Component
 public class LockComponent {
 
@@ -36,7 +38,9 @@ public class LockComponent {
      * @return
      */
     public boolean tryLock(String key, Integer timeoutSec) {
-        return lockRedisTemplate.opsForValue().setIfAbsent(LOCK_PREFIX + getKey(key), System.currentTimeMillis() + "", Duration.ofSeconds(timeoutSec));
+        return lockRedisTemplate.opsForValue().setIfAbsent(
+                LOCK_PREFIX + getKey(key),
+                System.currentTimeMillis() + "", Duration.ofSeconds(timeoutSec));
     }
 
     /**
@@ -54,6 +58,8 @@ public class LockComponent {
             try {
                 Thread.sleep(20);
             } catch (InterruptedException e) {
+                log.info("[Redis 锁] 系统重启，放弃获取锁：{}", key);
+                return false;
             }
         } while (!res && ((System.currentTimeMillis() - startTime) / 1000 > timeoutSec));
         return res;

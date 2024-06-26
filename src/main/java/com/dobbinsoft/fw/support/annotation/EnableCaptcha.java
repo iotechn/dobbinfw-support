@@ -6,11 +6,8 @@ import org.springframework.context.annotation.Import;
 import java.lang.annotation.*;
 
 /**
- * ClassName: EnableDynamicConfig
- * Description: EnableDynamicConfig
- *
- * @author: e-weichaozheng
- * @date: 2021-04-25
+ * ClassName: EnableCaptcha
+ * Description: 是否激活滑动验证码，目前支持AjCaptcha
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)

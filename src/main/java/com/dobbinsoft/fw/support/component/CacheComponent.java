@@ -1,8 +1,14 @@
 package com.dobbinsoft.fw.support.component;
 
-import com.alibaba.fastjson.JSONObject;
 import com.dobbinsoft.fw.support.model.Page;
+import com.dobbinsoft.fw.support.utils.JacksonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.geo.Point;
+import org.springframework.data.redis.connection.RedisGeoCommands;
+import org.springframework.data.redis.core.GeoOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
@@ -25,11 +31,6 @@ public class CacheComponent {
     private BeforeGetCacheKey beforeGetCacheKey;
 
     /**
-     * 用于描述一系列的 将要执行的 Redis （写）操作
-     */
-    private ThreadLocal<CacheContext> contextThreadLocal = new ThreadLocal<>();
-
-    /**
      * 放入不过期不序列化缓存
      *
      * @param key
@@ -40,12 +41,13 @@ public class CacheComponent {
     }
 
     /**
-     * 放入不过期不序列化缓存
+     * 放入过期不序列化缓存
      *
      * @param key
      * @param value
      * @param expireSec
      */
+    //
     public void putRaw(String key, String value, Integer expireSec) {
         stringRedisTemplate.opsForValue().set(getKey(key), value, expireSec, TimeUnit.SECONDS);
     }
@@ -68,7 +70,7 @@ public class CacheComponent {
      * @param obj
      */
     public void putObj(String key, Object obj) {
-        stringRedisTemplate.opsForValue().set(getKey(key), JSONObject.toJSONString(obj));
+        stringRedisTemplate.opsForValue().set(getKey(key), JacksonUtil.toJSONString(obj));
     }
 
     /**
@@ -79,7 +81,7 @@ public class CacheComponent {
      * @param expireSec
      */
     public void putObj(String key, Object obj, Integer expireSec) {
-        stringRedisTemplate.opsForValue().set(getKey(key), JSONObject.toJSONString(obj), expireSec, TimeUnit.SECONDS);
+        stringRedisTemplate.opsForValue().set(getKey(key), JacksonUtil.toJSONString(obj), expireSec, TimeUnit.SECONDS);
     }
 
     /**
@@ -95,7 +97,15 @@ public class CacheComponent {
         if (StringUtils.isEmpty(json)) {
             return null;
         }
-        return JSONObject.parseObject(json, clazz);
+        return JacksonUtil.parseObject(json, clazz);
+    }
+
+    public Long incrementKey(String key, long delta) {
+        return stringRedisTemplate.opsForValue().increment(getKey(key), delta);
+    }
+
+    public Long decrementKey(String key, long delta) {
+        return stringRedisTemplate.opsForValue().increment(getKey(key), -delta);
     }
 
     /**
@@ -111,7 +121,7 @@ public class CacheComponent {
         if (StringUtils.isEmpty(json)) {
             return null;
         }
-        return JSONObject.parseArray(json, clazz);
+        return JacksonUtil.parseArray(json, clazz);
     }
 
     /**
@@ -133,7 +143,7 @@ public class CacheComponent {
      * @param obj
      */
     public void putHashObj(String key, String hashKey, Object obj) {
-        stringRedisTemplate.opsForHash().put(getKey(key), hashKey, JSONObject.toJSONString(obj));
+        stringRedisTemplate.opsForHash().put(getKey(key), hashKey, JacksonUtil.toJSONString(obj));
     }
 
     /**
@@ -147,7 +157,7 @@ public class CacheComponent {
     public void putHashObj(String key, String hashKey, Object obj, Integer expireSec) {
         String k = getKey(key);
         boolean hasKey = stringRedisTemplate.hasKey(k);
-        stringRedisTemplate.opsForHash().put(k, hashKey, JSONObject.toJSONString(obj));
+        stringRedisTemplate.opsForHash().put(k, hashKey, JacksonUtil.toJSONString(obj));
         if (!hasKey) {
             stringRedisTemplate.expire(k, expireSec, TimeUnit.SECONDS);
         }
@@ -206,7 +216,7 @@ public class CacheComponent {
         if (StringUtils.isEmpty(o)) {
             return null;
         }
-        return JSONObject.parseObject(o, clazz);
+        return JacksonUtil.parseObject(o, clazz);
     }
 
     /**
@@ -223,21 +233,21 @@ public class CacheComponent {
         if (StringUtils.isEmpty(o)) {
             return null;
         }
-        return JSONObject.parseArray(o, clazz);
+        return JacksonUtil.parseArray(o, clazz);
     }
 
     /**
      * 批量获取Hash表里面的值
      *
      * @param key 桶的名字
-     * @param hashKeys String类型键集合 Collection<String>
+     * @param hashKeys String类型键集合 Collection《String》
      * @param clazz
      * @param <T>
      * @return
      */
     public <T> List<T> getHashMultiAsList(String key, Collection hashKeys, Class<T> clazz) {
         List<String> list = stringRedisTemplate.opsForHash().multiGet(getKey(key), hashKeys);
-        return list.stream().map(item -> JSONObject.parseObject(item, clazz)).collect(Collectors.toList());
+        return list.stream().map(item -> JacksonUtil.parseObject(item, clazz)).collect(Collectors.toList());
     }
 
     /**
@@ -411,6 +421,26 @@ public class CacheComponent {
         return stringRedisTemplate.opsForSet().isMember(getKey(key), member);
     }
 
+    public boolean addPoint(String key, Point point, String member) {
+        return stringRedisTemplate.opsForGeo().add(key, point, member) > 0;
+    }
+
+    public boolean delPoint(String key, String... member) {
+        return stringRedisTemplate.opsForGeo().remove(key, member) > 0;
+    }
+
+    public List<String> searchNearby(String key, Point point, Integer distanceMeters) {
+        GeoOperations<String, String> geoOperations = stringRedisTemplate.opsForGeo();
+        GeoResults<RedisGeoCommands.GeoLocation<String>> results = geoOperations.radius(key, new Circle(point, distanceMeters),
+                RedisGeoCommands.GeoRadiusCommandArgs.newGeoRadiusArgs().includeCoordinates().sortAscending());
+        List<String> arrayList = new ArrayList<>();
+        for (GeoResult<RedisGeoCommands.GeoLocation<String>> result : results) {
+            RedisGeoCommands.GeoLocation<String> content = result.getContent();
+            arrayList.add(content.getName());
+        }
+        return arrayList;
+    }
+
 
     /**
      * 删除键 / 桶 / hash 表等
@@ -478,19 +508,6 @@ public class CacheComponent {
             }).collect(Collectors.toList());
         }
         return keys;
-    }
-
-    /**
-     * 获取缓存上下文
-     * @return
-     */
-    public CacheContext getCacheContext() {
-        CacheContext cacheContext = this.contextThreadLocal.get();
-        if (cacheContext == null) {
-            cacheContext = new CacheContext();
-            this.contextThreadLocal.set(cacheContext);
-        }
-        return cacheContext;
     }
 
 }

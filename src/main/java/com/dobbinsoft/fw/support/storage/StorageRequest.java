@@ -7,9 +7,6 @@ import java.io.InputStream;
 /**
  * ClassName: StorageRequest
  * Description: 上传对象请求
- *
- * @author: e-weichaozheng
- * @date: 2021-03-17
  */
 @Data
 public class StorageRequest {

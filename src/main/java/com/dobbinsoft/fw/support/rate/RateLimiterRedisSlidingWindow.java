@@ -1,6 +1,5 @@
 package com.dobbinsoft.fw.support.rate;
 
-import com.alibaba.fastjson.JSONObject;
 import com.dobbinsoft.fw.core.annotation.HttpMethod;
 import com.dobbinsoft.fw.core.annotation.RateLimitType;
 import lombok.Data;
@@ -9,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -17,8 +15,6 @@ import java.util.concurrent.TimeUnit;
  * ClassName: RateLimiterRedisSlidingWindow
  * Description: Redis 实现 滑动窗口 限流器
  *
- * @author: e-weichaozheng
- * @date: 2021-04-12
  */
 @Slf4j
 public class RateLimiterRedisSlidingWindow implements RateLimiter {
@@ -65,7 +61,6 @@ public class RateLimiterRedisSlidingWindow implements RateLimiter {
             int smallWindow = bigWindow / DIV;
             TimeHolder timeHolder = new TimeHolder();
             Map<Object, Object> entries = lockRedisTemplate.opsForHash().entries(key);
-            log.info(JSONObject.toJSONString(entries));
             int sum = entries.values().stream().filter(item -> {
                 long v = new Long((String) item);
                 if (v > 1618284149838L) {

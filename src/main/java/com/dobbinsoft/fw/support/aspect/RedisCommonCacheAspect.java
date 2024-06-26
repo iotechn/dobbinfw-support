@@ -34,25 +34,25 @@ public class RedisCommonCacheAspect {
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         AspectCommonCache annotation = signature.getMethod().getAnnotation(AspectCommonCache.class);
-        int[] ints = annotation.argIndex();
+        int[] argIndexes = annotation.argIndex();
         Object[] args = joinPoint.getArgs();
-        String key = annotation.value();
-        for (int i = 0; i < ints.length; i++) {
+        StringBuilder key = new StringBuilder(annotation.value());
+        for (int i = 0; i < argIndexes.length; i++) {
             if (i != 0) {
-                key = key + ":" + args[ints[i]];
+                key.append(":").append(args[argIndexes[i]]);
             } else {
-                key = key + args[ints[i]];
+                key.append(args[argIndexes[i]]);
             }
         }
 
         // 走缓存
         if (annotation.arrayClass() != Object.class) {
-            List objList = cacheComponent.getObjList(key, annotation.arrayClass());
+            List<?> objList = cacheComponent.getObjList(key.toString(), annotation.arrayClass());
             if (objList != null) {
                 return objList;
             }
         } else {
-            Object obj = cacheComponent.getObj(key, signature.getReturnType());
+            Object obj = cacheComponent.getObj(key.toString(), signature.getReturnType());
             if (obj != null) {
                 return obj;
             }
@@ -61,9 +61,9 @@ public class RedisCommonCacheAspect {
         // 走方法
         Object proceed = joinPoint.proceed();
         if (annotation.second() > 0) {
-            cacheComponent.putObj(key, proceed, annotation.second());
+            cacheComponent.putObj(key.toString(), proceed, annotation.second());
         } else {
-            cacheComponent.putObj(key, proceed);
+            cacheComponent.putObj(key.toString(), proceed);
         }
         return proceed;
     }

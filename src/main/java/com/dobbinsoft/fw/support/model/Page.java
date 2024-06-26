@@ -1,9 +1,10 @@
 package com.dobbinsoft.fw.support.model;
 
-import com.alibaba.fastjson.annotation.JSONField;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
@@ -29,6 +30,7 @@ public class Page<T> implements Serializable, IPage<T> {
 
     private int pageSize;
 
+    @Getter
     private long count;
 
     private List<OrderItem> orderItems;
@@ -44,10 +46,6 @@ public class Page<T> implements Serializable, IPage<T> {
         return count / pageSize + (count % pageSize == 0 ? 0 : 1);
     }
 
-    public List<T> getItems() {
-        return items;
-    }
-
     public boolean hasNext() {
         return getPageNo() < getTotalPageNo();
     }
@@ -59,31 +57,21 @@ public class Page<T> implements Serializable, IPage<T> {
     public String getMsg() {
         return "第" + pageNo + "页,共" + count + "条";
     }
-
-    public int getCode() {
-        return 0;
-    }
-
-    public long getCount() {
-        return this.count;
-    }
-
     /** 实现MP的IPage接口，以另一种形式展示 **/
 
     @Override
-    @JSONField(serialize = false)
     public List<OrderItem> orders() {
         return orderItems;
     }
 
     @Override
-    @JSONField(serialize = false)
+    @JsonIgnore
     public List<T> getRecords() {
         return this.items;
     }
 
     @Override
-    @JSONField(serialize = false)
+    @JsonIgnore
     public IPage<T> setRecords(List<T> records) {
         this.setItems(records);
         return this;
@@ -100,26 +88,26 @@ public class Page<T> implements Serializable, IPage<T> {
     }
 
     @Override
-    @JSONField(serialize = false)
+    @JsonIgnore
     public long getSize() {
         return this.getPageSize();
     }
 
     @Override
-    @JSONField(serialize = false)
+    @JsonIgnore
     public IPage<T> setSize(long size) {
         this.setPageSize((int) size);
         return this;
     }
 
     @Override
-    @JSONField(serialize = false)
+    @JsonIgnore
     public long getCurrent() {
         return this.getPageNo();
     }
 
     @Override
-    @JSONField(serialize = false)
+    @JsonIgnore
     public IPage<T> setCurrent(long current) {
         this.setPageNo((int) current);
         return this;

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * Created by rize on 2019/6/30.
@@ -15,9 +15,9 @@ public class SuperDO {
     private Long id;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private Date gmtUpdate;
+    private LocalDateTime gmtUpdate;
 
     @TableField(fill = FieldFill.INSERT)
-    private Date gmtCreate;
+    private LocalDateTime gmtCreate;
 
 }

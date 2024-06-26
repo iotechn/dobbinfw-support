@@ -1,13 +1,19 @@
 package com.dobbinsoft.fw.support.storage;
 
+import java.io.InputStream;
+
 /**
  * ClassName: StorageClient
  * Description: 一个抽象的，存储接口
- *
- * @author: e-weichaozheng
- * @date: 2021-03-17
  */
 public interface StorageClient {
+
+    /**
+     *
+     * @param key
+     * @return
+     */
+    public StorageInfoResult info(String key);
 
     /**
      * 保存对象
@@ -38,6 +44,13 @@ public interface StorageClient {
     public boolean deletePrivate(String key);
 
     /**
+     * 为 key 或公开的URL拼接样式
+     * @param key
+     * @param style
+     */
+    public String appendStyleForKey(String key, String style);
+
+    /**
      * 获取私有对象临时访问URL
      * @param key
      * @param expireSec
@@ -51,5 +64,50 @@ public interface StorageClient {
      * @return
      */
     public String getKeyFormUrl(String url);
+
+    /**
+     * 删除path
+     * @param path
+     * @return
+     */
+    public boolean delPath(String path);
+
+    /**
+     * 获取文件
+     * @param request
+     * @return
+     */
+    public StorageListResult listKeys(StorageListRequest request);
+
+    /**
+     * 获取预签名，可以使流量不通过应用服务器而上传文件
+     * @param key
+     * @param method
+     *     GET,
+     *     POST,
+     *     PUT,
+     *     DELETE,
+     *     HEAD,
+     *     PATCH;
+     * @param expireSec
+     * @return
+     */
+    public String getPresignedUrl(String key, String method, Integer expireSec);
+
+
+    /**
+     * 获取预签名POST， 因为小程序不支持PUT上传文件
+     * @param objectKey
+     * @param expireSec
+     * @return
+     */
+    public PresignedPostResult getPresignedUrlPost(String objectKey, Integer expireSec);
+
+    /**
+     * 下载文件到流，要自己关
+     * @param key
+     * @return
+     */
+    public InputStream download(String key);
 
 }

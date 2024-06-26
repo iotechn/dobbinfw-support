@@ -1,27 +1,23 @@
 package com.dobbinsoft.fw.support.component;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
+@Setter
 public class CacheContext {
 
-    private List<SuperContext> list = new ArrayList();
+    private List<SuperContext> list = new ArrayList<>();
 
     /**
      * 从SQL中返回的 返回值
      */
     private Object dbReturn;
-
-    public void setDbReturn(Object dbReturn) {
-        this.dbReturn = dbReturn;
-    }
-
-    public Object getDbReturn() {
-        return dbReturn;
-    }
 
     public void append(SuperContext o) {
         list.add(o);
@@ -108,7 +104,4 @@ public class CacheContext {
 
     }
 
-    public List<SuperContext> getList() {
-        return list;
-    }
 }

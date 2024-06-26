@@ -1,10 +1,5 @@
 package com.dobbinsoft.fw.support.storage;
 
-import com.aliyun.oss.OSSClient;
-import com.aliyun.oss.common.comm.ResponseMessage;
-import com.aliyun.oss.model.ObjectMetadata;
-import com.aliyun.oss.model.PutObjectRequest;
-import com.aliyun.oss.model.PutObjectResult;
 import com.dobbinsoft.fw.support.properties.FwObjectStorageProperties;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,68 +7,44 @@ import org.springframework.beans.factory.annotation.Autowired;
 /**
  * ClassName: AliStorageClient
  * Description: 阿里云对象存储实现
- *
- * @author: e-weichaozheng
- * @date: 2021-03-17
  */
-public class AliStorageClient implements StorageClient, InitializingBean {
+public class AliStorageClient extends S3StorageClient implements StorageClient, InitializingBean {
 
     @Autowired
     private FwObjectStorageProperties properties;
 
-    private OSSClient ossClient;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
-         ossClient = new OSSClient(properties.getAliEndpoint(), properties.getAliAccessKeyId(), properties.getAliAccessKeySecret());
+    public String getAccessKeyId() {
+        return properties.getAliAccessKeyId();
     }
 
     @Override
-    public StorageResult save(StorageRequest request) {
-        ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setContentLength(request.getSize());
-        objectMetadata.setContentType(request.getContentType());
-        PutObjectRequest putObjectRequest =
-                new PutObjectRequest(
-                        properties.getAliBucket(),
-                        request.getPath() + "/" + request.getFilename(), request.getIs(), objectMetadata);
-        putObjectRequest.setProcess("");
-        PutObjectResult putObjectResult = ossClient.putObject(putObjectRequest);
-        ResponseMessage response = putObjectResult.getResponse();
-        StorageResult result = new StorageResult();
-        int statusCode = response.getStatusCode();
-        result.setSuc(statusCode == 200);
-        if (result.isSuc()) {
-            result.setUrl(properties.getAliBaseUrl() + request.getPath() + "/" + request.getFilename());
+    public String getAccessKeySecret() {
+        return properties.getAliAccessKeySecret();
+    }
+
+    @Override
+    public String getBucketName() {
+        return properties.getAliBucket();
+    }
+
+    @Override
+    public String getBaseUrl() {
+        return properties.getAliBaseUrl();
+    }
+
+    @Override
+    public String getEndpoint() {
+        return properties.getAliEndpoint();
+    }
+
+    @Override
+    public String appendStyleForKey(String key, String style) {
+        if (key.contains("?x-oss-process=image/")) {
+            return key + "/" + style;
+        } else {
+            return key + "?x-oss-process=image/" + style;
         }
-        return result;
-    }
-
-    @Override
-    public StoragePrivateResult savePrivate(StorageRequest request) {
-        throw new RuntimeException("不支持私有保存");
-    }
-
-    @Override
-    public boolean delete(String url) {
-        int index = url.indexOf("/", 5);
-        String key = url.substring(index);
-        ossClient.deleteObject(properties.getAliBucket(), key);
-        return true;
-    }
-
-    @Override
-    public boolean deletePrivate(String key) {
-        throw new RuntimeException("不支持私有保存");
-    }
-
-    @Override
-    public String getPrivateUrl(String key, Integer expireSec) {
-        throw new RuntimeException("不支持私有保存");
-    }
-
-    @Override
-    public String getKeyFormUrl(String url) {
-        throw new RuntimeException("不支持私有保存");
     }
 }

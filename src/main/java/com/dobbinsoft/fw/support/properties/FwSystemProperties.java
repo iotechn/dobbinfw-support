@@ -1,9 +1,8 @@
 package com.dobbinsoft.fw.support.properties;
 
-import com.dobbinsoft.fw.support.annotation.DynamicConfigProperties;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * Description:
@@ -12,28 +11,25 @@ import org.springframework.stereotype.Component;
  * Time: 21:47
  */
 @Data
-@DynamicConfigProperties(prefix = FwDynamicConst.SYSTEM_CONFIG_PREFIX)
+@Configuration
 @ConfigurationProperties(prefix = "com.dobbinsoft.system")
 public class FwSystemProperties {
 
     /**
-     * 用户会话周期（M）
+     * 用户会话周期（S）
      */
     private Integer userSessionPeriod;
 
     /**
-     * 管理员会话周期（M）
+     * 管理员会话周期（S）
      */
     private Integer adminSessionPeriod;
 
     /**
-     * SSL 配置
+     * 是否开启登录互斥
      */
-    private String sslCrtPath;
+    private Boolean mutexLogin;
 
-    private String sslKeyPath;
-
-    private String guest;
 
 
 

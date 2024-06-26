@@ -8,8 +8,6 @@ import java.util.List;
  * ClassName: PermissionPoint
  * Description: 描述一个权限点
  *
- * @author: e-weichaozheng
- * @date: 2021-03-17
  */
 @Data
 public class PermissionPoint {

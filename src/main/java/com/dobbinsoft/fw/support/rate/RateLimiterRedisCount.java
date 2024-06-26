@@ -10,9 +10,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * ClassName: RateLimiterRedisCount
  * Description: Redis实现计数器 限流器
- *
- * @author: e-weichaozheng
- * @date: 2021-04-12
  */
 public class RateLimiterRedisCount implements RateLimiter {
 

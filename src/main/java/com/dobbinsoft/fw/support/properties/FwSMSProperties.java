@@ -1,9 +1,8 @@
 package com.dobbinsoft.fw.support.properties;
 
-import com.dobbinsoft.fw.support.annotation.DynamicConfigProperties;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * Description:
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Component;
  * Time: 15:51
  */
 @Data
-@DynamicConfigProperties(prefix = FwDynamicConst.SMS_CONFIG_PREFIX)
+@Configuration
 @ConfigurationProperties(prefix = "com.dobbinsoft.sms")
 public class FwSMSProperties {
 
@@ -32,18 +31,22 @@ public class FwSMSProperties {
 
     private String aliyunAdminLoginTemplateId;
 
-    private Integer qcloudAppId;
+    private String qcloudAppId;
 
     private String qcloudAppKey;
 
+    private String qcloudSecretId;
+
+    private String qcloudSecretKey;
+
     private String qcloudSignature;
 
-    private Integer qcloudRegisterTemplateId;
+    private String qcloudRegisterTemplateId;
 
-    private Integer qcloudBindPhoneTemplateId;
+    private String qcloudBindPhoneTemplateId;
 
-    private Integer qcloudResetPasswordTemplateId;
+    private String qcloudResetPasswordTemplateId;
 
-    private Integer qcloudAdminLoginTemplateId;
+    private String qcloudAdminLoginTemplateId;
 
 }

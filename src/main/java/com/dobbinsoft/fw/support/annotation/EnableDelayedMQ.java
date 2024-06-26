@@ -7,10 +7,7 @@ import java.lang.annotation.*;
 
 /**
  * ClassName: EnableDelayMQ
- * Description: 延迟队列
- *
- * @author: e-weichaozheng
- * @date: 2021-04-25
+ * Description: 激活延迟队列
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)

@@ -17,10 +17,8 @@ import java.util.stream.Collectors;
 
 /**
  * ClassName: DelayedMessageConfig
- * Description: TODO
+ * Description: Redis实现的延迟队列，原理是Redis键失效通知，需要打开此选项
  *
- * @author: e-weichaozheng
- * @date: 2021-03-18
  */
 public class DelayedMessageConfig {
 
