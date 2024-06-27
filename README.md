@@ -1,5 +1,7 @@
 ![](https://doc-1324075299.cos.ap-guangzhou.myqcloud.com/dobbinfw/banner.jpg)
 
+[![Release Version](https://img.shields.io/badge/release-2.0.2-brightgreen.svg)](https://gitee.com/iotechn/dobbinfw-support) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://gitee.com/iotechn/unimall/pulls)
+
 #### 一、项目背景 
 
 > 为了快速落地项目、快速搭建脚手架，dobbinsoft开发一套基于SpringBoot3 MyBatis的框架，并手搓了如参数校验、文档生成、限流、鉴权等等常用功能。core包中包括工具类、注解、模型等。

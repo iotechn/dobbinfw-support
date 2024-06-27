@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class RedisCaptchaCache implements CaptchaCacheService {
 
-    private static final String CAPTCHA_PREFIX = "AJ_CAPTCHA_PREFIX:";
+    public static final String CAPTCHA_PREFIX = "AJ_CAPTCHA_PREFIX:";
 
     @Autowired
     private CacheComponent cacheComponent;
