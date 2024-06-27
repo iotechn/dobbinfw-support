@@ -1,4 +1,4 @@
-## Dobbin Framework Support Logo
+![](https://doc-1324075299.cos.ap-guangzhou.myqcloud.com/dobbinfw/banner.jpg)
 
 #### 一、项目背景 
 
@@ -18,10 +18,16 @@
 引入maven坐标到工程pom.xml文件中。
 
 ```xml
-<groupId>com.dobbinsoft</groupId>
-<artifactId>fw-support</artifactId>
-<version>2.x.x</version>
+<dependency>
+    <groupId>com.dobbinsoft</groupId>
+    <artifactId>fw-support</artifactId>
+    <version>2.x.x</version>
+</dependency>
 ```
+
+版本可以去maven库里面查询：
+
+https://central.sonatype.com/artifact/com.dobbinsoft/fw-support/versions
 
 #### 三、功能列表 & 文档索引
 
