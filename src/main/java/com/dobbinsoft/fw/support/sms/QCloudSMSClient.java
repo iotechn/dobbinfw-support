@@ -66,7 +66,7 @@ public class QCloudSMSClient implements SMSClient, InitializingBean {
                     "2021-01-11",
                     "SendSms",
                     body,
-                    "ap-guangzho",
+                    StringUtils.isEmpty(properties.getQcloudRegion()) ? "ap-guangzhou" : "",
                     "");
             QCloudSendSMSResponse qCloudSendSMSResponse = JacksonUtil.parseObject(resp, QCloudSendSMSResponse.class);
             QCloudSendSMSResponse.ResponseDTO response = qCloudSendSMSResponse.getResponse();

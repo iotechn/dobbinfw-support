@@ -49,4 +49,9 @@ public class FwSMSProperties {
 
     private String qcloudAdminLoginTemplateId;
 
+    /**
+     * 可选区域，默认广州
+     */
+    private String qcloudRegion;
+
 }
