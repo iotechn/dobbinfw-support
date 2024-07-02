@@ -1,7 +1,10 @@
 package com.dobbinsoft.fw.support.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.dobbinsoft.fw.support.utils.BeanUtils;
 
+import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -35,6 +38,20 @@ public interface IMapper<T> extends BaseMapper<T> {
 
     default List<T> selectList() {
         return this.selectList(null);
+    }
+
+    default <DTO> DTO selectByIdDto(Serializable id, Class<DTO> clazz) {
+        T t = this.selectById(id);
+        if (t == null) {
+            return null;
+        }
+        try {
+            DTO dto = clazz.getConstructor().newInstance();
+            BeanUtils.copyProperties(t, dto);
+            return dto;
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            throw new RuntimeException("请为DTO添加public的无参构造器");
+        }
     }
 
 

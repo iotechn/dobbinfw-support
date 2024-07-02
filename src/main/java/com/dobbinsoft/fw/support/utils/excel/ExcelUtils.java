@@ -1,5 +1,7 @@
 package com.dobbinsoft.fw.support.utils.excel;
 
+import com.dobbinsoft.fw.support.model.Page;
+import com.dobbinsoft.fw.support.utils.CollectionUtils;
 import com.dobbinsoft.fw.support.utils.FieldUtils;
 import com.dobbinsoft.fw.support.utils.StringUtils;
 import jakarta.servlet.http.HttpServletResponse;
@@ -8,6 +10,7 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellRangeAddressList;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.*;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,16 +19,15 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Slf4j
 public class ExcelUtils {
@@ -59,19 +61,27 @@ public class ExcelUtils {
      */
     private final static String E = "e";
 
-    private static final String TIMEF_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    private static final String TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     private static final String DATE_FORMAT = "yyyy-MM-dd";
 
     public static <T> List<T> importExcel(MultipartFile file, Class<T> clazz) {
         checkFile(file);
-        Workbook workbook = getWorkBook(file);
-        return importExcel(clazz, workbook);
+        try (Workbook workbook = getWorkBook(file)) {
+            return importExcel(clazz, workbook);
+        } catch (IOException e) {
+            log.error("导入解析失败!", e);
+            return Collections.emptyList();
+        }
     }
 
     public static <T> List<T> importExcel(InputStream is, String fileName, Class<T> clazz) {
-        Workbook workbook = getWorkBook(is, fileName);
-        return importExcel(clazz, workbook);
+        try (Workbook workbook = getWorkBook(is, fileName)) {
+            return importExcel(clazz, workbook);
+        } catch (IOException e) {
+            log.error("导入解析失败!", e);
+            return Collections.emptyList();
+        }
     }
 
     @Nullable
@@ -95,8 +105,10 @@ public class ExcelUtils {
                 }
                 Object obj;
                 try {
-                    obj = clazz.newInstance();
-                } catch (IllegalAccessException | InstantiationException e) {
+                    // 获取POJO无参构造器
+                    Constructor<T> constructor = clazz.getConstructor();
+                    obj = constructor.newInstance();
+                } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
                     log.error("【excel导入】clazz映射地址：{},{}", clazz.getCanonicalName(), "excel导入异常！");
                     throw new RuntimeException("excel导入异常", e);
                 }
@@ -305,13 +317,19 @@ public class ExcelUtils {
     }
 
 
+    /**
+     * 导出表格
+     * @param response
+     * @param data
+     * @param clazz
+     * @param <T>
+     */
     public static <T> void exportExcel(HttpServletResponse response, ExcelData<T> data, Class<T> clazz) {
         log.info("导出解析开始，fileName:{}", data.getFileName());
-        try {
-            //实例化XSSFWorkbook
-            XSSFWorkbook workbook = new XSSFWorkbook();
+        //实例化XSSFWorkbook
+        try (XSSFWorkbook workbook = new XSSFWorkbook()){
             //创建一个Excel表单，参数为sheet的名字
-            XSSFSheet sheet = setSheet(clazz, workbook);
+            Sheet sheet = setSheet(clazz, workbook);
             //设置单元格并赋值
             setData(workbook, sheet, data.getData(), setTitle(workbook, sheet, clazz));
             //设置浏览器下载
@@ -322,12 +340,18 @@ public class ExcelUtils {
         }
     }
 
+    /**
+     * 导出表格到流
+     * @param os
+     * @param data
+     * @param clazz
+     * @param <T>
+     */
     public static <T> void exportExcel(OutputStream os, List<T> data, Class<T> clazz) {
-        try {
-            //实例化XSSFWorkbook
-            XSSFWorkbook workbook = new XSSFWorkbook();
+        //实例化XSSFWorkbook
+        try (XSSFWorkbook workbook = new XSSFWorkbook()){
             //创建一个Excel表单，参数为sheet的名字
-            XSSFSheet sheet = setSheet(clazz, workbook);
+            Sheet sheet = setSheet(clazz, workbook);
             //设置单元格并赋值
             setData(workbook, sheet, data, setTitle(workbook, sheet, clazz));
             workbook.write(os);
@@ -337,12 +361,78 @@ public class ExcelUtils {
         }
     }
 
-    private static <T> XSSFSheet setSheet(Class<T> clazz, XSSFWorkbook workbook) {
+    /**
+     * 导出大表格到流
+     * @param os
+     * @param adapter 大文件导出适配器
+     * @param <T>
+     */
+    public static <T> void exportBigExcel(OutputStream os, ExcelBigExportAdapter<T> adapter) {
+        Class<T> clazz = adapter.clazz();
+        Sheet sheet = null;
+        Field[] fields = FieldUtils.getAllFields(clazz);
+        try (SXSSFWorkbook workbook = new SXSSFWorkbook(200)) {
+            Page<T> dataBuffer = null;
+            do {
+                dataBuffer = adapter.getData();
+                adapter.getPageNo().incrementAndGet();
+                if (!dataBuffer.hasPrevious()) {
+                    // 首页，创建sheet， 设置表头
+                    sheet = setSheet(clazz, workbook);
+                    setTitle(workbook, sheet, clazz);
+                }
+                setData(workbook, sheet, dataBuffer.getItems(), fields);
+            } while (dataBuffer.hasNext() || CollectionUtils.isNotEmpty(dataBuffer.getItems()));
+            workbook.write(os);
+            log.info("导出解析成功!");
+        } catch (Exception e) {
+            log.error("导出解析失败!", e);
+        }
+    }
+
+    /**
+     * 导出大表格到流
+     * @param response
+     * @param adapter 大文件导出适配器
+     * @param <T>
+     */
+    public static <T> void exportBigExcel(HttpServletResponse response, ExcelBigExportAdapter<T> adapter, String fileName) {
+        Class<T> clazz = adapter.clazz();
+        Sheet sheet = null;
+        Field[] fields = FieldUtils.getAllFields(clazz);
+        try (SXSSFWorkbook workbook = new SXSSFWorkbook(200)) {
+            Page<T> dataBuffer = null;
+            do {
+                dataBuffer = adapter.getData();
+                adapter.getPageNo().incrementAndGet();
+                if (!dataBuffer.hasPrevious()) {
+                    // 首页，创建sheet， 设置表头
+                    sheet = setSheet(clazz, workbook);
+                    setTitle(workbook, sheet, clazz);
+                }
+                setData(workbook, sheet, dataBuffer.getItems(), fields);
+            } while (dataBuffer.hasNext() && CollectionUtils.isNotEmpty(dataBuffer.getItems()));
+            //设置浏览器下载
+            setBrowser(response, workbook, fileName + XLS_X);
+            log.info("导出解析成功!");
+        } catch (Exception e) {
+            log.error("导出解析失败!", e);
+        }
+    }
+
+    /**
+     * 设置工作簿
+     * @param clazz
+     * @param workbook
+     * @return
+     * @param <T>
+     */
+    private static <T> Sheet setSheet(Class<T> clazz, Workbook workbook) {
         Class<?> superClass = clazz;
         do {
             if (superClass.isAnnotationPresent(ExcelSheet.class)) {
                 ExcelSheet excelSheet = superClass.getDeclaredAnnotation(ExcelSheet.class);
-                XSSFSheet sheet = workbook.createSheet(excelSheet.title());
+                Sheet sheet = workbook.createSheet(excelSheet.title());
                 sheet.setDefaultRowHeight((short) (excelSheet.rowHeight() * 20));
                 return sheet;
             }
@@ -351,10 +441,17 @@ public class ExcelUtils {
         return workbook.createSheet("sheet");
     }
 
-    private static Field[] setTitle(XSSFWorkbook workbook, XSSFSheet sheet, Class clazz) {
+    /**
+     * 设置表头
+     * @param workbook
+     * @param sheet
+     * @param clazz
+     * @return
+     */
+    private static Field[] setTitle(Workbook workbook, Sheet sheet, Class clazz) {
         Field[] fields = FieldUtils.getAllFields(clazz);
         try {
-            XSSFCellStyle style = createXssfCellStyle(workbook);
+            CellStyle style = createXssfCellStyle(workbook);
             setHeaderTemplate(sheet, clazz, style);
             setColumnTemplate(sheet, fields, style);
             setColumnTitle(sheet, fields, style);
@@ -364,11 +461,11 @@ public class ExcelUtils {
         return fields;
     }
 
-    private static XSSFCellStyle createXssfCellStyle(XSSFWorkbook workbook) {
-        XSSFCellStyle style = workbook.createCellStyle();
+    private static CellStyle createXssfCellStyle(Workbook workbook) {
+        CellStyle style = workbook.createCellStyle();
 
         // 设置字体
-        XSSFFont font = workbook.createFont();
+        Font font = workbook.createFont();
 //        font.setBold(true);
         font.setFontName("Arial");
         font.setFontHeightInPoints((short) 14);
@@ -390,28 +487,28 @@ public class ExcelUtils {
         style.setBorderRight(BorderStyle.THIN);
 
         // 设置日期格式
-        XSSFDataFormat fmt = workbook.createDataFormat();
+        DataFormat fmt = workbook.createDataFormat();
         style.setDataFormat(fmt.getFormat("m/d/yy h:mm"));
 
         return style;
     }
 
-    private static void setColumnTemplate(XSSFSheet sheet, Field[] fields, XSSFCellStyle style) {
+    private static void setColumnTemplate(Sheet sheet, Field[] fields, CellStyle style) {
         int nextRow = sheet.getLastRowNum() + 1;
         for (Field field : fields) {
             field.setAccessible(true);
             if (field.isAnnotationPresent(ExcelTemplate.class)) {
                 ExcelTemplate template = field.getDeclaredAnnotation(ExcelTemplate.class);
                 CellRangeAddress region = new CellRangeAddress(nextRow, nextRow + template.rowspan(), template.colIndex(), template.colIndex() + template.colspan());
-                XSSFRow row = sheet.getRow(nextRow);
+                Row row = sheet.getRow(nextRow);
                 if (Objects.isNull(row)) {
                     row = sheet.createRow(nextRow);
                 }
                 sheet.addMergedRegion(region);
-                XSSFCell cell = row.createCell(template.colIndex());
+                Cell cell = row.createCell(template.colIndex());
                 cell.setCellValue(template.value());
                 cell.setCellStyle(style);
-                XSSFRow lastRow = sheet.getRow(nextRow + template.rowspan());
+                Row lastRow = sheet.getRow(nextRow + template.rowspan());
                 if (Objects.isNull(lastRow)) {
                     sheet.createRow(nextRow + template.rowspan());
                 }
@@ -419,33 +516,33 @@ public class ExcelUtils {
         }
     }
 
-    private static void setColumnTitle(XSSFSheet sheet, Field[] fields, XSSFCellStyle style) {
+    private static void setColumnTitle(Sheet sheet, Field[] fields, CellStyle style) {
         int nextRow = sheet.getLastRowNum() + 1;
         for (Field field : fields) {
             field.setAccessible(true);
             if (field.isAnnotationPresent(ExcelColumn.class)) {
                 ExcelColumn excelColumn = field.getDeclaredAnnotation(ExcelColumn.class);
                 sheet.setColumnWidth(excelColumn.index(), excelColumn.width() * 256);
-                XSSFRow row = sheet.getRow(nextRow);
+                Row row = sheet.getRow(nextRow);
                 if (Objects.isNull(row)) {
                     row = sheet.createRow(nextRow);
                 }
-                XSSFCell cell = row.createCell(excelColumn.index());
+                Cell cell = row.createCell(excelColumn.index());
                 if (StringUtils.isNotEmpty(excelColumn.subTitle())) {
 
                     String part1 = excelColumn.title() + "\n";
                     String part2 = excelColumn.subTitle();
 
                     XSSFRichTextString richTextString = new XSSFRichTextString(part1 + part2);
-                    XSSFWorkbook workbook = sheet.getWorkbook();
-                    XSSFFont font1 = workbook.createFont();
+                    Workbook workbook = sheet.getWorkbook();
+                    Font font1 = workbook.createFont();
                     font1.setFontName("Arial");
                     font1.setFontHeightInPoints((short) 14);
                     font1.setColor(IndexedColors.BLACK.getIndex());
                     richTextString.applyFont(0, part1.length(), font1);
 
                     // 创建并设置第二种字体
-                    XSSFFont font2 = workbook.createFont();
+                    Font font2 = workbook.createFont();
                     font2.setFontName("Arial");
                     font2.setFontHeightInPoints((short) 10);
                     font2.setColor(IndexedColors.BLACK.getIndex());
@@ -466,32 +563,38 @@ public class ExcelUtils {
         }
     }
 
-    private static void setValidation(XSSFSheet sheet, String[] enums, int firstRow, int lastRow, int firstCol, int lastCol) {
-        DataValidationHelper validationHelper = new XSSFDataValidationHelper(sheet);
-        DataValidationConstraint constraint = validationHelper.createExplicitListConstraint(enums);
-        CellRangeAddressList addressList = new CellRangeAddressList(firstRow, lastRow, firstCol, lastCol);
-        DataValidation validation = validationHelper.createValidation(constraint, addressList);
-        validation.setShowErrorBox(true);
-        sheet.addValidationData(validation);
+    private static void setValidation(Sheet sheet, String[] enums, int firstRow, int lastRow, int firstCol, int lastCol) {
+        if (sheet instanceof XSSFSheet) {
+            // 此处不抛出异常，如果不支持校验器的Sheet，则直接不校验
+            DataValidationHelper validationHelper = new XSSFDataValidationHelper((XSSFSheet) sheet);
+            DataValidationConstraint constraint = validationHelper.createExplicitListConstraint(enums);
+            CellRangeAddressList addressList = new CellRangeAddressList(firstRow, lastRow, firstCol, lastCol);
+            DataValidation validation = validationHelper.createValidation(constraint, addressList);
+            validation.setShowErrorBox(true);
+            sheet.addValidationData(validation);
+        }
     }
 
-    private static void setHeaderTemplate(XSSFSheet sheet, Class clazz, XSSFCellStyle style) {
+    private static void setHeaderTemplate(Sheet sheet, Class clazz, CellStyle style) {
         if (clazz.isAnnotationPresent(ExcelTemplate.class)) {
             ExcelTemplate template = (ExcelTemplate) clazz.getDeclaredAnnotation(ExcelTemplate.class);
             CellRangeAddress region = new CellRangeAddress(FIRST_ROW, FIRST_ROW + template.rowspan(), template.colIndex(), template.colIndex() + template.colspan());
-            XSSFRow row = sheet.createRow(FIRST_ROW);
+            Row row = sheet.createRow(FIRST_ROW);
             sheet.addMergedRegion(region);
-            XSSFCell cell = row.createCell(FIRST_COL);
+            Cell cell = row.createCell(FIRST_COL);
             cell.setCellValue(template.value());
             cell.setCellStyle(style);
         }
     }
 
-    private static <T> void setData(XSSFWorkbook workbook, XSSFSheet sheet, List<T> data, Field[] fields) {
+    private static <T> void setData(Workbook workbook, Sheet sheet, List<T> data, Field[] fields) {
+        if (CollectionUtils.isEmpty(data)) {
+            return;
+        }
         try {
             int lastRow = sheet.getLastRowNum();
             for (int i = 0; i < data.size(); i++) {
-                XSSFRow row = sheet.createRow(lastRow + i + 1);
+                Row row = sheet.createRow(lastRow + i + 1);
                 for (Field field : fields) {
                     field.setAccessible(true);
                     if (field.isAnnotationPresent(ExcelColumn.class)) {
@@ -501,34 +604,38 @@ public class ExcelUtils {
                             continue;
                         }
                         if (field.getType().equals(Double.class)) {
-                            XSSFCell cell = row.createCell(excelColumn.index());
+                            Cell cell = row.createCell(excelColumn.index());
                             cell.setCellValue((Double) value);
                             setDataCellStyle(workbook, excelColumn, cell);
                         } else if (field.getType().equals(Date.class)) {
-                            XSSFCell cell = row.createCell(excelColumn.index());
+                            Cell cell = row.createCell(excelColumn.index());
                             cell.setCellValue((Date) value);
                             setDataCellStyle(workbook, cell,
-                                    StringUtils.isNoneBlank(excelColumn.format()) ? excelColumn.format() : TIMEF_FORMAT);
+                                    StringUtils.isNoneBlank(excelColumn.format()) ? excelColumn.format() : TIME_FORMAT);
                         } else if (field.getType().equals(LocalDate.class)) {
-                            XSSFCell cell = row.createCell(excelColumn.index());
+                            Cell cell = row.createCell(excelColumn.index());
                             cell.setCellValue((LocalDate) value);
                             setDataCellStyle(workbook, cell,
                                     StringUtils.isNoneBlank(excelColumn.format()) ? excelColumn.format() : DATE_FORMAT);
                         } else if (field.getType().equals(LocalDateTime.class)) {
-                            XSSFCell cell = row.createCell(excelColumn.index());
+                            Cell cell = row.createCell(excelColumn.index());
                             cell.setCellValue((LocalDateTime) value);
                             setDataCellStyle(workbook, cell,
-                                    StringUtils.isNoneBlank(excelColumn.format()) ? excelColumn.format() : TIMEF_FORMAT);
+                                    StringUtils.isNoneBlank(excelColumn.format()) ? excelColumn.format() : TIME_FORMAT);
                         } else if (field.getType().equals(Integer.class)) {
-                            XSSFCell cell = row.createCell(excelColumn.index());
+                            Cell cell = row.createCell(excelColumn.index());
                             cell.setCellValue((Integer) value);
                             setDataCellStyle(workbook, excelColumn, cell);
                         } else if (field.getType().equals(ExcelImage.class)) {
                             // 如果是字节数组，则尝试从单元格中读取图片
                             ExcelImage excelImage = (ExcelImage) value;
                             insertImage(sheet, excelImage.getBytes(), row.getRowNum(), excelColumn.index(), excelImage.getName());
+                        } else if (field.getType().equals(BigDecimal.class)) {
+                            Cell cell = row.createCell(excelColumn.index());
+                            cell.setCellValue(value.toString());
+                            setDataCellStyle(workbook, excelColumn, cell);
                         } else {
-                            XSSFCell cell = row.createCell(excelColumn.index());
+                            Cell cell = row.createCell(excelColumn.index());
                             cell.setCellValue((String) value);
                             setDataCellStyle(workbook, excelColumn, cell);
                         }
@@ -541,7 +648,7 @@ public class ExcelUtils {
         }
     }
 
-    private static void insertImage(XSSFSheet sheet, byte[] imageBytes, int row, int col, String imageName) throws IOException {
+    private static void insertImage(Sheet sheet, byte[] imageBytes, int row, int col, String imageName) throws IOException {
         String fileExtension = StringUtils.getFileExtension(imageName);
         int pictureTypePng = Workbook.PICTURE_TYPE_PNG;
         if ("jpg".equals(fileExtension) || "jpeg".equals(fileExtension)) {
@@ -571,23 +678,23 @@ public class ExcelUtils {
     }
 
 
-    private static void setDataCellStyle(XSSFWorkbook workbook, XSSFCell cell, String format) {
-        XSSFCellStyle style = workbook.createCellStyle();
-        XSSFDataFormat fmt = workbook.createDataFormat();
+    private static void setDataCellStyle(Workbook workbook, Cell cell, String format) {
+        CellStyle style = workbook.createCellStyle();
+        DataFormat fmt = workbook.createDataFormat();
         style.setDataFormat(fmt.getFormat(format));
         cell.setCellStyle(style);
     }
 
-    private static void setDataCellStyle(XSSFWorkbook workbook, ExcelColumn excelColumn, XSSFCell cell) {
-        XSSFCellStyle style = workbook.createCellStyle();
-        XSSFDataFormat fmt = workbook.createDataFormat();
+    private static void setDataCellStyle(Workbook workbook, ExcelColumn excelColumn, Cell cell) {
+        CellStyle style = workbook.createCellStyle();
+        DataFormat fmt = workbook.createDataFormat();
         if (StringUtils.isNoneBlank(excelColumn.format())) {
             style.setDataFormat(fmt.getFormat(excelColumn.format()));
         }
         cell.setCellStyle(style);
     }
 
-    private static void setBrowser(HttpServletResponse response, XSSFWorkbook workbook, String fileName) {
+    private static void setBrowser(HttpServletResponse response, Workbook workbook, String fileName) {
         try (OutputStream os = new BufferedOutputStream(response.getOutputStream())) {
             //设置response的Header
             response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8"));

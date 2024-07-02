@@ -226,7 +226,7 @@ public class TimeUtils {
      * @return 转换后的字符串，转换失败返回null
      */
     public static String localDateToString(LocalDate localDate) {
-        return localDateToString(localDate, DATE_TIME_FORMAT);
+        return localDateToString(localDate, DATE_FORMAT);
     }
 
     /**
