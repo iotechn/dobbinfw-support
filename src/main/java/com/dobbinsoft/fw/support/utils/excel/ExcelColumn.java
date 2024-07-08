@@ -13,6 +13,9 @@ public @interface ExcelColumn {
     // 子标题，可用于格式提示
     String subTitle() default "";
 
+    // 标题注释，点击时会弹开
+    String titleComment() default "";
+
     // 下标
     int index() default 0;
 
@@ -27,4 +30,5 @@ public @interface ExcelColumn {
 
     // 可用哪些枚举
     String[] enums() default {};
+
 }

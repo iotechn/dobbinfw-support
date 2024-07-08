@@ -463,6 +463,25 @@ public class CacheComponent {
 
 
     /**
+     * 基数统计 计数
+     * @param key
+     * @param values
+     * @return
+     */
+    public boolean addHyperLogLog(String key, String ...values) {
+        return stringRedisTemplate.opsForHyperLogLog().add(key, values) != 0;
+    }
+
+    /**
+     * 基数统计 读取
+     * @param key
+     * @return
+     */
+    public long sizeHyperLogLog(String key) {
+        return stringRedisTemplate.opsForHyperLogLog().size(key);
+    }
+
+    /**
      * 获取指定前缀的Key
      *
      * @param prefix

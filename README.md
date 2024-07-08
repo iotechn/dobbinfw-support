@@ -1,6 +1,6 @@
 ![](https://doc-1324075299.cos.ap-guangzhou.myqcloud.com/dobbinfw/banner.jpg)
 
-[![Release Version](https://img.shields.io/badge/release-2.0.2-brightgreen.svg)](https://gitee.com/iotechn/dobbinfw-support) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://gitee.com/iotechn/unimall/pulls)
+[![Release Version](https://img.shields.io/badge/release-2.0.3-brightgreen.svg)](https://gitee.com/iotechn/dobbinfw-support) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://gitee.com/iotechn/unimall/pulls)
 
 #### 一、项目背景 
 
@@ -55,7 +55,11 @@ https://central.sonatype.com/artifact/com.dobbinsoft/fw-support/versions
 
 [3.11. 对象存储(Storage)](./doc/11.storage.md)
 
-[3.12. 工具类(Utils)](./doc/12.utils.md)
+[3.12. 表格操作(Excel)](./doc/12.excel.md)
+
+[3.13. 统计PV/UV](./doc/13.tracking.md)
+
+[3.14. 工具类(Utils)](./doc/14.utils)
 
 
 #### 四、贡献 & 社区

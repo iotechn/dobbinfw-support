@@ -31,7 +31,7 @@ public class MachineComponent {
                 if (this.machineNo == null) {
                     for (int i = 1; i < Integer.MAX_VALUE; i++) {
                         Boolean suc = lockRedisTemplate.opsForValue().setIfAbsent(MACHINE_PREFIX + i, "" + i);
-                        if (suc) {
+                        if (Boolean.TRUE.equals(suc)) {
                             lockRedisTemplate.expire(MACHINE_PREFIX + i, 15, TimeUnit.MINUTES);
                             this.machineNo = i;
                             break;
