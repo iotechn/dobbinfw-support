@@ -28,31 +28,28 @@ import java.util.stream.Collectors;
 
 public abstract class S3StorageClient implements StorageClient, InitializingBean {
 
-    private AmazonS3 s3Client;
+    protected AmazonS3 s3Client;
 
     public abstract String getAccessKeyId();
     public abstract String getAccessKeySecret();
     public abstract String getBucketName();
+    public String getRuntimeBucketName() {
+        return getBucketName();
+    }
     public abstract String getBaseUrl();
     public abstract String getEndpoint();
 
 
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        // 实例加载
-        this.s3Client = AmazonS3ClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(getAccessKeyId(), getAccessKeySecret())))
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(
-                        this.getBaseUrl(),
-                        ""))
-                .withPathStyleAccessEnabled(true)
-                .build();
+    public AmazonS3 getS3Client() {
+        return s3Client;
     }
 
     @Override
+    public abstract void afterPropertiesSet() throws Exception;
+
+    @Override
     public StorageInfoResult info(String key) {
-        ObjectMetadata objectMetadata = s3Client.getObjectMetadata(getBucketName(), key);
+        ObjectMetadata objectMetadata = s3Client.getObjectMetadata(getRuntimeBucketName(), key);
         StorageInfoResult storageInfoResult = new StorageInfoResult();
         storageInfoResult.setKey(key);
         if (objectMetadata == null) {
@@ -70,7 +67,7 @@ public abstract class S3StorageClient implements StorageClient, InitializingBean
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(request.getSize());
         metadata.setContentType(request.getContentType());
-        PutObjectRequest putRequest = new PutObjectRequest(getBucketName(), request.getPath() + "/" + request.getFilename(), request.getIs(), metadata);
+        PutObjectRequest putRequest = new PutObjectRequest(getRuntimeBucketName(), request.getPath() + "/" + request.getFilename(), request.getIs(), metadata);
         s3Client.putObject(putRequest);
         StorageResult storageResult = new StorageResult();
         storageResult.setSuc(true);
@@ -83,25 +80,37 @@ public abstract class S3StorageClient implements StorageClient, InitializingBean
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentLength(request.getSize());
         metadata.setContentType(request.getContentType());
-        PutObjectRequest putRequest = new PutObjectRequest(getBucketName(), request.getPath() + "/" + request.getFilename(), request.getIs(), metadata);
+
+        PutObjectRequest putRequest = new PutObjectRequest(
+                getRuntimeBucketName(),
+                request.getPath() + "/" + request.getFilename(),
+                request.getIs(),
+                metadata
+        );
+
+        // 设置 ACL 为私有读写
+        putRequest.setCannedAcl(CannedAccessControlList.Private);
+
         s3Client.putObject(putRequest);
+
         StoragePrivateResult storageResult = new StoragePrivateResult();
         storageResult.setSuc(true);
         storageResult.setKey(request.getPath() + "/" + request.getFilename());
         storageResult.setUrl(getPrivateUrl(storageResult.getKey(), 300));
+
         return storageResult;
     }
 
     @Override
     public boolean delete(String url) {
         String keyFormUrl = getKeyFormUrl(url);
-        s3Client.deleteObject(getBucketName(), keyFormUrl);
+        s3Client.deleteObject(getRuntimeBucketName(), keyFormUrl);
         return true;
     }
 
     @Override
     public boolean deletePrivate(String key) {
-        s3Client.deleteObject(getBucketName(), key);
+        s3Client.deleteObject(getRuntimeBucketName(), key);
         return true;
     }
 
@@ -132,7 +141,7 @@ public abstract class S3StorageClient implements StorageClient, InitializingBean
     @Override
     public String getPrivateUrl(String key, Integer expireSec) {
         ImageProcessParams imageProcessParams = parseImageProcessParams(key);
-        GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest("", imageProcessParams.key)
+        GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(getRuntimeBucketName(), imageProcessParams.key)
                 .withExpiration(new Date(System.currentTimeMillis() + expireSec * 1000));
         imageProcessParams.params.forEach(request::addRequestParameter);
         URL url = s3Client.generatePresignedUrl(request);
@@ -167,7 +176,7 @@ public abstract class S3StorageClient implements StorageClient, InitializingBean
             request.setNextMarker(nextMarker);
             StorageListResult storageListResult = listKeys(request);
             List<StorageListResult.Item> items = storageListResult.getItems();
-            DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(getBucketName());
+            DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(getRuntimeBucketName());
             List<DeleteObjectsRequest.KeyVersion> keys = items
                     .stream()
                     .map(item -> new DeleteObjectsRequest.KeyVersion(item.getKey()))
@@ -182,7 +191,7 @@ public abstract class S3StorageClient implements StorageClient, InitializingBean
     @Override
     public StorageListResult listKeys(StorageListRequest request) {
         ListObjectsV2Request listRequest = new ListObjectsV2Request()
-                .withBucketName(getBucketName())
+                .withBucketName(getRuntimeBucketName())
                 .withPrefix(request.getPrefix())
                 .withDelimiter(request.getNextMarker())
                 .withMaxKeys(request.getRows());
@@ -202,7 +211,7 @@ public abstract class S3StorageClient implements StorageClient, InitializingBean
 
     @Override
     public String getPresignedUrl(String key, String method, Integer expireSec) {
-        GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest("", key)
+        GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(getRuntimeBucketName(), key)
                 .withMethod(HttpMethod.valueOf(method))
                 .withExpiration(new Date(System.currentTimeMillis() + expireSec * 1000));
 
@@ -235,7 +244,7 @@ public abstract class S3StorageClient implements StorageClient, InitializingBean
         PresignedPostResult result = new PresignedPostResult();
         result.setPolicy(base64Policy);
         result.setSignature(signature);
-        result.setBucket(getBucketName());
+        result.setBucket(getRuntimeBucketName());
         result.setKey(objectKey);
         result.setAccessKeyId(getAccessKeyId());
         result.setUrl("https://" + getBucketName() + "." + getEndpoint());

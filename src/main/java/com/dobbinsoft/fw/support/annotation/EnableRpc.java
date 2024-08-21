@@ -15,10 +15,4 @@ import java.lang.annotation.*;
 @Documented
 public @interface EnableRpc {
 
-    /**
-     * 需要动态代理的RpcService接口
-     * @return
-     */
-    public Class[] providerApis();
-
 }

@@ -29,4 +29,6 @@ public @interface HttpMethod {
     String permissionName() default "";
     String contentType() default "";
     String exportFileName() default "";
+    // 不打HTTP日志
+    boolean noLog() default false;
 }

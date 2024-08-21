@@ -3,12 +3,11 @@ package com.dobbinsoft.fw.support.utils;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.CollectionType;
@@ -22,6 +21,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -87,8 +87,22 @@ public class JacksonUtil {
         javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)));
         javaTimeModule.addDeserializer(LocalDate.class, new LocalDateDeserializer(DateTimeFormatter.ofPattern(DATE_FORMAT)));
         javaTimeModule.addDeserializer(LocalTime.class, new LocalTimeDeserializer(DateTimeFormatter.ofPattern(TIME_FORMAT)));
+
         instance.registerModule(javaTimeModule);
+
+        //针对Long类型精度丢失
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(Long.class, new LongToStringSerializer());
+//        module.addSerializer(Long.TYPE, new LongToStringSerializer());
+        instance.registerModule(module);
         return instance;
+    }
+
+    public static class LongToStringSerializer extends JsonSerializer<Long> {
+        @Override
+        public void serialize(Long value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            gen.writeString(value.toString());
+        }
     }
     //============================================== 序列化/反序列化 方法封装 =============================================================
 

@@ -432,7 +432,7 @@ public class ExcelUtils {
         do {
             if (superClass.isAnnotationPresent(ExcelSheet.class)) {
                 ExcelSheet excelSheet = superClass.getDeclaredAnnotation(ExcelSheet.class);
-                Sheet sheet = workbook.createSheet(excelSheet.title());
+                Sheet sheet = workbook.createSheet(StringUtils.isEmpty(excelSheet.title()) ? "sheet" : excelSheet.title());
                 sheet.setDefaultRowHeight((short) (excelSheet.rowHeight() * 20));
                 return sheet;
             }
@@ -603,41 +603,45 @@ public class ExcelUtils {
                         if (Objects.isNull(value)) {
                             continue;
                         }
-                        if (field.getType().equals(Double.class)) {
-                            Cell cell = row.createCell(excelColumn.index());
-                            cell.setCellValue((Double) value);
-                            setDataCellStyle(workbook, excelColumn, cell);
-                        } else if (field.getType().equals(Date.class)) {
-                            Cell cell = row.createCell(excelColumn.index());
-                            cell.setCellValue((Date) value);
-                            setDataCellStyle(workbook, cell,
-                                    StringUtils.isNoneBlank(excelColumn.format()) ? excelColumn.format() : TIME_FORMAT);
-                        } else if (field.getType().equals(LocalDate.class)) {
-                            Cell cell = row.createCell(excelColumn.index());
-                            cell.setCellValue((LocalDate) value);
-                            setDataCellStyle(workbook, cell,
-                                    StringUtils.isNoneBlank(excelColumn.format()) ? excelColumn.format() : DATE_FORMAT);
-                        } else if (field.getType().equals(LocalDateTime.class)) {
-                            Cell cell = row.createCell(excelColumn.index());
-                            cell.setCellValue((LocalDateTime) value);
-                            setDataCellStyle(workbook, cell,
-                                    StringUtils.isNoneBlank(excelColumn.format()) ? excelColumn.format() : TIME_FORMAT);
-                        } else if (field.getType().equals(Integer.class)) {
-                            Cell cell = row.createCell(excelColumn.index());
-                            cell.setCellValue((Integer) value);
-                            setDataCellStyle(workbook, excelColumn, cell);
-                        } else if (field.getType().equals(ExcelImage.class)) {
-                            // 如果是字节数组，则尝试从单元格中读取图片
-                            ExcelImage excelImage = (ExcelImage) value;
-                            insertImage(sheet, excelImage.getBytes(), row.getRowNum(), excelColumn.index(), excelImage.getName());
-                        } else if (field.getType().equals(BigDecimal.class)) {
-                            Cell cell = row.createCell(excelColumn.index());
-                            cell.setCellValue(value.toString());
-                            setDataCellStyle(workbook, excelColumn, cell);
-                        } else {
-                            Cell cell = row.createCell(excelColumn.index());
-                            cell.setCellValue((String) value);
-                            setDataCellStyle(workbook, excelColumn, cell);
+                        try {
+                            if (field.getType().equals(Double.class)) {
+                                Cell cell = row.createCell(excelColumn.index());
+                                cell.setCellValue((Double) value);
+                                setDataCellStyle(workbook, excelColumn, cell);
+                            } else if (field.getType().equals(Date.class)) {
+                                Cell cell = row.createCell(excelColumn.index());
+                                cell.setCellValue((Date) value);
+                                setDataCellStyle(workbook, cell,
+                                        StringUtils.isNoneBlank(excelColumn.format()) ? excelColumn.format() : TIME_FORMAT);
+                            } else if (field.getType().equals(LocalDate.class)) {
+                                Cell cell = row.createCell(excelColumn.index());
+                                cell.setCellValue((LocalDate) value);
+                                setDataCellStyle(workbook, cell,
+                                        StringUtils.isNoneBlank(excelColumn.format()) ? excelColumn.format() : DATE_FORMAT);
+                            } else if (field.getType().equals(LocalDateTime.class)) {
+                                Cell cell = row.createCell(excelColumn.index());
+                                cell.setCellValue((LocalDateTime) value);
+                                setDataCellStyle(workbook, cell,
+                                        StringUtils.isNoneBlank(excelColumn.format()) ? excelColumn.format() : TIME_FORMAT);
+                            } else if (field.getType().equals(Integer.class)) {
+                                Cell cell = row.createCell(excelColumn.index());
+                                cell.setCellValue((Integer) value);
+                                setDataCellStyle(workbook, excelColumn, cell);
+                            } else if (field.getType().equals(ExcelImage.class)) {
+                                // 如果是字节数组，则尝试从单元格中读取图片
+                                ExcelImage excelImage = (ExcelImage) value;
+                                insertImage(sheet, excelImage.getBytes(), row.getRowNum(), excelColumn.index(), excelImage.getName());
+                            } else if (field.getType().equals(BigDecimal.class)) {
+                                Cell cell = row.createCell(excelColumn.index());
+                                cell.setCellValue(value.toString());
+                                setDataCellStyle(workbook, excelColumn, cell);
+                            } else {
+                                Cell cell = row.createCell(excelColumn.index());
+                                cell.setCellValue((String) value);
+                                setDataCellStyle(workbook, excelColumn, cell);
+                            }
+                        } catch (Exception e) {
+                            log.error("单元格赋值失败！", e);
                         }
                     }
                 }

@@ -1,5 +1,9 @@
 package com.dobbinsoft.fw.support.storage;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.dobbinsoft.fw.support.properties.FwObjectStorageProperties;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +41,17 @@ public class QCloudStorageClient extends S3StorageClient implements StorageClien
     @Override
     public String getEndpoint() {
         return properties.getQcloudBucket() + ".cos." + properties.getQcloudRegion() + ".myqcloud.com";
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        // 实例加载
+        this.s3Client = AmazonS3ClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(getAccessKeyId(), getAccessKeySecret())))
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(
+                        "https://cos." + properties.getQcloudRegion() + ".myqcloud.com",
+                        this.properties.getQcloudRegion()))
+                .build();
     }
 
     @Override

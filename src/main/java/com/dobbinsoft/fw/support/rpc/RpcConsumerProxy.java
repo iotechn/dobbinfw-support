@@ -114,7 +114,7 @@ public class RpcConsumerProxy implements InitializingBean {
                 if (jsonNode.get("errno").asInt() == 200) {
                     if (genericReturnType instanceof ParameterizedType) {
                         TypeFactory typeFactory = JacksonUtil.objectMapper.getTypeFactory();
-                        JavaType javaType = typeFactory.constructType(returnType);
+                        JavaType javaType = typeFactory.constructType(genericReturnType);
                         // 使用JavaType进行反序列化
                         return JacksonUtil.objectMapper.convertValue(jsonNode.get("data"), javaType);
                     } else if (Const.IGNORE_PARAM_LIST.contains(returnType)) {

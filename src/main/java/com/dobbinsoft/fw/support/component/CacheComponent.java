@@ -2,6 +2,7 @@ package com.dobbinsoft.fw.support.component;
 
 import com.dobbinsoft.fw.support.model.Page;
 import com.dobbinsoft.fw.support.utils.JacksonUtil;
+import com.dobbinsoft.fw.support.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.GeoResult;
@@ -12,7 +13,6 @@ import org.springframework.data.redis.core.GeoOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +30,8 @@ public class CacheComponent {
     @Autowired(required = false)
     private BeforeGetCacheKey beforeGetCacheKey;
 
+    private static final String NULL_FLAG = "___DOBBIN_OBJECT_IS_NULL___";
+
     /**
      * 放入不过期不序列化缓存
      *
@@ -37,6 +39,10 @@ public class CacheComponent {
      * @param value
      */
     public void putRaw(String key, String value) {
+        if (value == null) {
+            stringRedisTemplate.opsForValue().set(getKey(key), NULL_FLAG);
+            return;
+        }
         stringRedisTemplate.opsForValue().set(getKey(key), value);
     }
 
@@ -49,7 +55,7 @@ public class CacheComponent {
      */
     //
     public void putRaw(String key, String value, Integer expireSec) {
-        stringRedisTemplate.opsForValue().set(getKey(key), value, expireSec, TimeUnit.SECONDS);
+        stringRedisTemplate.opsForValue().set(getKey(key), value == null ? NULL_FLAG : value, expireSec, TimeUnit.SECONDS);
     }
 
     /**
@@ -59,7 +65,11 @@ public class CacheComponent {
      * @return
      */
     public String getRaw(String key) {
-        return stringRedisTemplate.opsForValue().get(getKey(key));
+        String raw = stringRedisTemplate.opsForValue().get(getKey(key));
+        if (NULL_FLAG.equals(raw)) {
+            return null;
+        }
+        return raw;
     }
 
 
@@ -70,7 +80,7 @@ public class CacheComponent {
      * @param obj
      */
     public void putObj(String key, Object obj) {
-        stringRedisTemplate.opsForValue().set(getKey(key), JacksonUtil.toJSONString(obj));
+        stringRedisTemplate.opsForValue().set(getKey(key), obj == null ? NULL_FLAG : JacksonUtil.toJSONString(obj));
     }
 
     /**
@@ -81,7 +91,7 @@ public class CacheComponent {
      * @param expireSec
      */
     public void putObj(String key, Object obj, Integer expireSec) {
-        stringRedisTemplate.opsForValue().set(getKey(key), JacksonUtil.toJSONString(obj), expireSec, TimeUnit.SECONDS);
+        stringRedisTemplate.opsForValue().set(getKey(key), obj == null ? NULL_FLAG : JacksonUtil.toJSONString(obj), expireSec, TimeUnit.SECONDS);
     }
 
     /**
@@ -94,7 +104,7 @@ public class CacheComponent {
      */
     public <T> T getObj(String key, Class<T> clazz) {
         String json = stringRedisTemplate.opsForValue().get(getKey(key));
-        if (StringUtils.isEmpty(json)) {
+        if (StringUtils.isEmpty(json) || NULL_FLAG.equals(json)) {
             return null;
         }
         return JacksonUtil.parseObject(json, clazz);
@@ -118,7 +128,7 @@ public class CacheComponent {
      */
     public <T> List<T> getObjList(String key, Class<T> clazz) {
         String json = stringRedisTemplate.opsForValue().get(getKey(key));
-        if (StringUtils.isEmpty(json)) {
+        if (StringUtils.isEmpty(json) || NULL_FLAG.equals(json)) {
             return null;
         }
         return JacksonUtil.parseArray(json, clazz);
@@ -132,7 +142,7 @@ public class CacheComponent {
      * @param value
      */
     public void putHashRaw(String key, String hashKey, String value) {
-        stringRedisTemplate.opsForHash().put(getKey(key), hashKey, value);
+        stringRedisTemplate.opsForHash().put(getKey(key), hashKey, value == null ? NULL_FLAG : value);
     }
 
     /**
@@ -143,7 +153,7 @@ public class CacheComponent {
      * @param obj
      */
     public void putHashObj(String key, String hashKey, Object obj) {
-        stringRedisTemplate.opsForHash().put(getKey(key), hashKey, JacksonUtil.toJSONString(obj));
+        stringRedisTemplate.opsForHash().put(getKey(key), hashKey, obj == null ? NULL_FLAG : JacksonUtil.toJSONString(obj));
     }
 
     /**
@@ -156,8 +166,8 @@ public class CacheComponent {
      */
     public void putHashObj(String key, String hashKey, Object obj, Integer expireSec) {
         String k = getKey(key);
-        boolean hasKey = stringRedisTemplate.hasKey(k);
-        stringRedisTemplate.opsForHash().put(k, hashKey, JacksonUtil.toJSONString(obj));
+        boolean hasKey = Boolean.TRUE.equals(stringRedisTemplate.hasKey(k));
+        stringRedisTemplate.opsForHash().put(k, hashKey, obj == null ? NULL_FLAG : JacksonUtil.toJSONString(obj));
         if (!hasKey) {
             stringRedisTemplate.expire(k, expireSec, TimeUnit.SECONDS);
         }
@@ -196,7 +206,7 @@ public class CacheComponent {
      */
     public String getHashRaw(String key, String hashKey) {
         String o = (String) stringRedisTemplate.opsForHash().get(getKey(key), hashKey);
-        if (StringUtils.isEmpty(o)) {
+        if (StringUtils.isEmpty(o) || NULL_FLAG.equals(o)) {
             return null;
         }
         return o;
@@ -213,7 +223,7 @@ public class CacheComponent {
      */
     public <T> T getHashObj(String key, String hashKey, Class<T> clazz) {
         String o = (String) stringRedisTemplate.opsForHash().get(getKey(key), hashKey);
-        if (StringUtils.isEmpty(o)) {
+        if (StringUtils.isEmpty(o) || NULL_FLAG.equals(o)) {
             return null;
         }
         return JacksonUtil.parseObject(o, clazz);
@@ -230,7 +240,7 @@ public class CacheComponent {
      */
     public <T> List<T> getHashList(String key, String hashKey, Class<T> clazz) {
         String o = (String) stringRedisTemplate.opsForHash().get(getKey(key), hashKey);
-        if (StringUtils.isEmpty(o)) {
+        if (StringUtils.isEmpty(o) || NULL_FLAG.equals(o)) {
             return null;
         }
         return JacksonUtil.parseArray(o, clazz);
@@ -247,7 +257,7 @@ public class CacheComponent {
      */
     public <T> List<T> getHashMultiAsList(String key, Collection hashKeys, Class<T> clazz) {
         List<String> list = stringRedisTemplate.opsForHash().multiGet(getKey(key), hashKeys);
-        return list.stream().map(item -> JacksonUtil.parseObject(item, clazz)).collect(Collectors.toList());
+        return list.stream().filter(item -> StringUtils.isNotEmpty(item) && !NULL_FLAG.equals(item)).map(item -> JacksonUtil.parseObject(item, clazz)).collect(Collectors.toList());
     }
 
     /**
@@ -259,7 +269,7 @@ public class CacheComponent {
      */
     public List<String> getHashMultiAsRawList(String key, Collection hashKeys) {
         List<String> list = stringRedisTemplate.opsForHash().multiGet(getKey(key), hashKeys);
-        return list;
+        return list.stream().map(item -> NULL_FLAG.equals(item) ? null : item).toList();
     }
 
     /**
@@ -274,16 +284,27 @@ public class CacheComponent {
 
     public void putHashAll(String key, Map<String, String> map, Integer expireSec) {
         String k = getKey(key);
+        for (String s : map.keySet()) {
+            map.putIfAbsent(s, NULL_FLAG);
+        }
         stringRedisTemplate.opsForHash().putAll(k, map);
         stringRedisTemplate.expire(k, expireSec, TimeUnit.SECONDS);
     }
 
     public Map<String,String> getHashAll(String key) {
         String k = getKey(key);
-        if (!stringRedisTemplate.hasKey(k)) {
+        if (Boolean.FALSE.equals(stringRedisTemplate.hasKey(k))) {
             return null;
         }
-        return (Map)stringRedisTemplate.opsForHash().entries(k);
+        Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(k);
+        Set<Object> keys = entries.keySet();
+        for (Object o : keys) {
+            Object tmp = entries.get(o);
+            if (NULL_FLAG.equals(tmp)) {
+                entries.put(o, null);
+            }
+        }
+        return (Map)entries;
     }
 
 

@@ -7,6 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class ExcelBigExportAdapter<T> {
 
+    protected AtomicInteger pageNoAtomic = new AtomicInteger(1);
+
     public abstract Class<T> clazz();
 
     /**
@@ -27,7 +29,7 @@ public abstract class ExcelBigExportAdapter<T> {
      * @return 页面自增器，每次getData后，会自动+1，初始值为1
      */
     public AtomicInteger getPageNo() {
-        return new AtomicInteger(1);
+        return pageNoAtomic;
     }
 
 }
