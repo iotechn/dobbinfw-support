@@ -29,6 +29,10 @@ public class RequestUtils {
         if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
             ipAddress = request.getRemoteAddr();
         }
+        if (ipAddress.contains(",")) {
+            // 阿里云SLB会将 LB的地址也传递过来，用逗号隔开。只需要取第一个即可
+            ipAddress = ipAddress.split(",")[0].trim();
+        }
         return ipAddress;
     }
 
