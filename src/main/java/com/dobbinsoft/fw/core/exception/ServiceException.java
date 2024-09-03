@@ -1,7 +1,9 @@
 package com.dobbinsoft.fw.core.exception;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
+import org.slf4j.event.Level;
 
 import java.io.Serializable;
 
@@ -17,6 +19,11 @@ public class ServiceException extends Exception implements Serializable {
 
     @Setter
     private int code;
+
+    @Getter
+    @Setter
+    @JsonIgnore
+    private Level logLevel;
 
     private Object attach;
 
@@ -42,6 +49,11 @@ public class ServiceException extends Exception implements Serializable {
 
     public ServiceException attach(Object attach) {
         this.attach = attach;
+        return this;
+    }
+
+    public ServiceException logLevel(Level level) {
+        this.logLevel = level;
         return this;
     }
 }

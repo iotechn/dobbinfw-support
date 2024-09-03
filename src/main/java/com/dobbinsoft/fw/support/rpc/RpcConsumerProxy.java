@@ -13,6 +13,8 @@ import com.dobbinsoft.fw.support.utils.TimeUtils;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
@@ -25,10 +27,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class RpcConsumerProxy implements InitializingBean {
@@ -36,9 +36,19 @@ public class RpcConsumerProxy implements InitializingBean {
     @Autowired
     private FwRpcConsumerProperties fwRpcConsumerProperties;
 
+    @Autowired(required = false)
+    private RpcContextCommonProvider rpcContextCommonProvider;
+
     private final OkHttpClient okHttpClient = new OkHttpClient();
 
     private final Map<String, FwRpcConsumerProperties.RpcProvider> providerMap = new HashMap<>();
+
+    private static final int JWT_EXPIRE_SECONDS = 60 * 60;
+
+    // Key 为 SystemID
+    private final Cache<String, String> jwtCache = Caffeine.newBuilder()
+            .expireAfterWrite(JWT_EXPIRE_SECONDS * 4 / 5, TimeUnit.SECONDS)
+            .build();
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -94,13 +104,22 @@ public class RpcConsumerProxy implements InitializingBean {
                 }
                 Map<String, String> header = new HashMap<>();
                 header.put("systemId", fwRpcConsumerProperties.getSystemId());
-                Map<String, String> payload = RpcContextHolder.getAll();
-                String rsa256 = JwtUtils.createRSA256(header, payload, 120, fwRpcConsumerProperties.getPrivateKey());
+                // 此操作会将通用context写入到context上下文中
+                if (rpcContextCommonProvider != null) {
+                    rpcContextCommonProvider.provide();
+                }
+                Map<String, String> context = RpcContextHolder.getAll();
+                String rsa256 = jwtCache.getIfPresent(fwRpcConsumerProperties.getSystemId());
+                if (rsa256 == null) {
+                    rsa256 = JwtUtils.createRSA256(header, Collections.emptyMap(), JWT_EXPIRE_SECONDS, fwRpcConsumerProperties.getPrivateKey());
+                    jwtCache.put(fwRpcConsumerProperties.getSystemId(), rsa256);
+                }
                 String json = okHttpClient.newCall(
                                 new Request
                                         .Builder()
                                         .url(rpcProvider.getUrl())
                                         .header(Const.RPC_HEADER, rsa256)
+                                        .header(Const.RPC_CONTEXT_JSON, JacksonUtil.toJSONString(context))
                                         .header(Const.RPC_SYSTEM_ID, fwRpcConsumerProperties.getSystemId())
                                         .post(builder.build())
                                         .build())

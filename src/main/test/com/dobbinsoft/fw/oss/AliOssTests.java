@@ -13,22 +13,22 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.util.StreamUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 
 @Slf4j
 @SpringBootTest(classes = TestsApplication.class, properties = {
         // 数据库连接
         "spring.application.name=support",
         "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver",
-        "spring.datasource.password=xxxx",
+        "spring.datasource.password=xxxxx",
         "spring.datasource.type=com.zaxxer.hikari.HikariDataSource",
         "spring.datasource.url=jdbc:mysql://192.168.123.180:31234/demo?autoReconnect=true&useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true",
         "spring.datasource.username=demo",
@@ -43,12 +43,13 @@ import java.io.IOException;
         "spring.user-redis.host=192.168.123.180:31235",
         // OSS 功能测试配置
         "com.dobbinsoft.oss.enable=aliyun",
-        "com.dobbinsoft.oss.ali-access-key-id=LTxxxxxxxxS",
-        "com.dobbinsoft.oss.ali-access-key-secret=2xxxxxxxxxxxxxxxxxJ",
-        "com.dobbinsoft.oss.ali-endpoint=oss-cn-chengdu.aliyuncs.com",
-        "com.dobbinsoft.oss.ali-bucket=xxxxx",
-        "com.dobbinsoft.oss.ali-base-url=https://xxxxx.oss-cn-chengdu.aliyuncs.com",
+        "com.dobbinsoft.oss.ali-access-key-id=LxxxxxxxxxxxxxxQ",
+        "com.dobbinsoft.oss.ali-access-key-secret=Xxxxxxxxxxxxv",
+        "com.dobbinsoft.oss.ali-endpoint=oss-cn-shanghai.aliyuncs.com",
+        "com.dobbinsoft.oss.ali-bucket=demo-qa",
+        "com.dobbinsoft.oss.ali-base-url=https://demo-qa.oss-cn-shanghai.aliyuncs.com",
 })
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AliOssTests {
 
     @Autowired
@@ -80,7 +81,7 @@ public class AliOssTests {
     @Order(2)
     public void testGetPublic() throws IOException {
         Response response = okHttpClient.newCall(new Request.Builder()
-                .url(fwObjectStorageProperties.getQcloudBaseUrl() + "/test/testFile.jpg")
+                .url(fwObjectStorageProperties.getAliBaseUrl() + "/test/testFile.jpg")
                 .build()).execute();
         if (response.code() != 200) {
             throw new RuntimeException("测试失败");
@@ -92,7 +93,7 @@ public class AliOssTests {
     @Test
     @Order(3)
     public void testDeletePublic() {
-        storageClient.delete(fwObjectStorageProperties.getQcloudBaseUrl() + "/test/testFile.jpg");
+        storageClient.delete(fwObjectStorageProperties.getAliBaseUrl() + "/test/testFile.jpg");
         log.info("[测试删除公开] 成功");
     }
 
@@ -109,7 +110,7 @@ public class AliOssTests {
         storageRequest.setContentType("image/jpg");
         StoragePrivateResult storagePrivateResult = storageClient.savePrivate(storageRequest);
         Response response = okHttpClient.newCall(new Request.Builder()
-                .url(fwObjectStorageProperties.getQcloudBaseUrl() + "/test/testFile.jpg")
+                .url(fwObjectStorageProperties.getAliBaseUrl() + "/test/testFile.jpg")
                 .build()).execute();
         if (response.code() == 200) {
             throw new RuntimeException("测试失败：私有文件不能公开访问");
@@ -134,6 +135,15 @@ public class AliOssTests {
 
     @Test
     @Order(6)
+    public void testDownloadPrivate() throws IOException {
+        try (InputStream download = storageClient.download("test/testFilePrivate.jpg")) {
+            byte[] bytes = StreamUtils.copyToByteArray(download);
+            log.info("[测试下载私有] 成功 bytes.length:{}", bytes.length);
+        }
+    }
+
+    @Test
+    @Order(7)
     public void testDeletePrivate() {
         storageClient.deletePrivate("test/testFilePrivate.jpg");
         log.info("[测试删除私有] 成功");

@@ -45,6 +45,8 @@ public class Const {
 
     public static final String RPC_HEADER = "RPCHEADER";
 
+    public static final String RPC_CONTEXT_JSON = "RPCCONTEXT";
+
     public static final String RPC_SYSTEM_ID = "RPCSYSTEMID";
 
     public static final String HTTP_TRACE_HEADER = "TRACE";

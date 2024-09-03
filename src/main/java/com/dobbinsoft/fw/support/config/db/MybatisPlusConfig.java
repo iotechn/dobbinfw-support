@@ -24,11 +24,15 @@ public class MybatisPlusConfig {
     }
 
     @Bean
-    public MybatisPlusInterceptor mybatisPlusInterceptor(List<InnerInterceptor> innerInterceptorList) {
+    public MybatisPlusInterceptor mybatisPlusInterceptor(List<InnerInterceptor> innerInterceptorList, PaginationInnerInterceptor paginationInnerInterceptor) {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         for (InnerInterceptor innerInterceptor : innerInterceptorList) {
-            interceptor.addInnerInterceptor(innerInterceptor);
+            // 分页插件最后加载
+            if (innerInterceptor != paginationInnerInterceptor) {
+                interceptor.addInnerInterceptor(innerInterceptor);
+            }
         }
+        interceptor.addInnerInterceptor(paginationInnerInterceptor);
         return interceptor;
     }
 

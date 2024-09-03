@@ -260,7 +260,7 @@ public abstract class S3StorageClient implements StorageClient, InitializingBean
 
     @Override
     public InputStream download(String key) {
-        GetObjectRequest getObjectRequest = new GetObjectRequest(getBucketName(), key);
+        GetObjectRequest getObjectRequest = new GetObjectRequest(getRuntimeBucketName(), key);
         S3Object s3Object = s3Client.getObject(getObjectRequest);
         return s3Object.getObjectContent();
     }
