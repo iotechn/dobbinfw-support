@@ -78,8 +78,8 @@ public class QCloudSMSClient implements SMSClient, InitializingBean {
                     return smsResult;
                 }
             }
-            logger.info("[腾讯短信发送] 回复与预期不一致 request=" + body);
-            logger.info("[腾讯短信发送] 回复与预期不一致 result=" + resp);
+            logger.error("[腾讯短信发送] 回复与预期不一致 request=" + body);
+            logger.error("[腾讯短信发送] 回复与预期不一致 result=" + resp);
             throw new ServiceException("腾讯云短信发送业务异常", CoreExceptionDefinition.THIRD_PART_IO_EXCEPTION.getCode());
         } catch (ServiceException e) {
             throw e;
