@@ -4,6 +4,8 @@ import com.dobbinsoft.fw.support.model.Page;
 import com.dobbinsoft.fw.support.utils.CollectionUtils;
 import com.dobbinsoft.fw.support.utils.FieldUtils;
 import com.dobbinsoft.fw.support.utils.StringUtils;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -15,6 +17,7 @@ import org.apache.poi.xssf.usermodel.*;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.swing.text.Style;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,6 +31,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class ExcelUtils {
@@ -116,8 +120,8 @@ public class ExcelUtils {
                 for (Field field : fields) {
                     // TODO 导入图片适配
                     ExcelColumn excelColumn = field.getDeclaredAnnotation(ExcelColumn.class);
-                    if (Objects.isNull(excelColumn)) {
-                        return null;
+                    if (Objects.isNull(excelColumn) || excelColumn.ignore()) {
+                        continue;
                     }
                     Cell cell = row.getCell(excelColumn.index());
                     if (excelColumn.rowIndex() >= rowNum) {
@@ -354,6 +358,31 @@ public class ExcelUtils {
             Sheet sheet = setSheet(clazz, workbook);
             //设置单元格并赋值
             setData(workbook, sheet, data, setTitle(workbook, sheet, clazz));
+            workbook.write(os);
+            log.info("导出解析成功!");
+        } catch (Exception e) {
+            log.error("导出解析失败!", e);
+        }
+    }
+
+    /**
+     * 导出表格到多个sheet
+     * @param os
+     * @param dataList  第0个数组，对应第0个class
+     * @param clazzList 第0个class，对应第0个数组
+     */
+    public static void exportExcelMultiSheets(OutputStream os, List<List<?>> dataList, List<Class<?>> clazzList) {
+        try (XSSFWorkbook workbook = new XSSFWorkbook()){
+            //创建一个Excel表单，参数为sheet的名字
+            for (int i = 0; i < clazzList.size(); i++) {
+                Class<?> clazz = clazzList.get(i);
+                List<?> data = dataList.get(i);
+                Sheet sheet = setSheet(clazz, workbook);
+                //设置单元格并赋值
+                setData(workbook, sheet, data, setTitle(workbook, sheet, clazz));
+            }
+
+
             workbook.write(os);
             log.info("导出解析成功!");
         } catch (Exception e) {
@@ -681,21 +710,39 @@ public class ExcelUtils {
         pict.resize(cellWidthInPoints / pict.getImageDimension().getWidth(), cellHeightInPoints / pict.getImageDimension().getHeight());
     }
 
+    // style 需要缓存,如果是同一个Workbook，
+
+    private final static Cache<String, CellStyle> styleCache = Caffeine.newBuilder()
+            .expireAfterWrite(120, TimeUnit.SECONDS)
+            .build();
+
 
     private static void setDataCellStyle(Workbook workbook, Cell cell, String format) {
+        CellStyle ifPresent = styleCache.getIfPresent(workbook.toString() + "___" + format);
+        if (ifPresent != null) {
+            cell.setCellStyle(ifPresent);
+            return;
+        }
         CellStyle style = workbook.createCellStyle();
         DataFormat fmt = workbook.createDataFormat();
         style.setDataFormat(fmt.getFormat(format));
         cell.setCellStyle(style);
+        styleCache.put(workbook + "___" + format, style);
     }
 
     private static void setDataCellStyle(Workbook workbook, ExcelColumn excelColumn, Cell cell) {
+        CellStyle ifPresent = styleCache.getIfPresent(workbook.toString() + "___" + excelColumn.format());
+        if (ifPresent != null) {
+            cell.setCellStyle(ifPresent);
+            return;
+        }
         CellStyle style = workbook.createCellStyle();
         DataFormat fmt = workbook.createDataFormat();
         if (StringUtils.isNoneBlank(excelColumn.format())) {
             style.setDataFormat(fmt.getFormat(excelColumn.format()));
         }
         cell.setCellStyle(style);
+        styleCache.put(workbook + "___" + excelColumn.format(), style);
     }
 
     private static void setBrowser(HttpServletResponse response, Workbook workbook, String fileName) {

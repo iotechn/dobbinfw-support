@@ -31,4 +31,6 @@ public @interface ExcelColumn {
     // 可用哪些枚举
     String[] enums() default {};
 
+    boolean ignore() default false;
+
 }

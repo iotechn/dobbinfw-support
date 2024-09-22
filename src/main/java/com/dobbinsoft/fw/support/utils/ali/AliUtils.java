@@ -75,17 +75,17 @@ public class AliUtils {
             // 发送请求
             try (CloseableHttpClient httpClient = HttpClients.createDefault(); CloseableHttpResponse response = httpClient.execute(httpRequest)) {
                 String result = EntityUtils.toString(response.getEntity(), "UTF-8");
-                log.info("[阿里云短信发送] 请求结果: {}", result);
+                log.info("[阿里云公共请求] 请求结果: {}", result);
                 return result;
             }
         } catch (IOException e) {
             // 异常处理
-            log.error("[阿里云短信发送] 网络异常", e);
-            throw new ServiceException("阿里云短信发送业务异常", CoreExceptionDefinition.THIRD_PART_IO_EXCEPTION.getCode());
+            log.error("[阿里云公共请求] 网络异常", e);
+            throw new ServiceException("阿里云公共请求业务异常", CoreExceptionDefinition.THIRD_PART_IO_EXCEPTION.getCode());
         } catch (Exception e) {
             // 异常处理
-            log.error("[阿里云短信发送] 异常", e);
-            throw new ServiceException("阿里云短信发送业务异常", CoreExceptionDefinition.THIRD_PART_SERVICE_EXCEPTION.getCode());
+            log.error("[阿里云公共请求] 异常", e);
+            throw new ServiceException("阿里云公共请求业务异常", CoreExceptionDefinition.THIRD_PART_SERVICE_EXCEPTION.getCode());
         }
     }
 
@@ -143,7 +143,7 @@ public class AliUtils {
             request.getHeaders().put("Authorization", authorization);
         } catch (Exception e) {
             // 异常处理
-            log.error("[阿里云API签名] 异常", e);
+            log.error("[阿里云公共请求] API签名 异常", e);
         }
     }
 

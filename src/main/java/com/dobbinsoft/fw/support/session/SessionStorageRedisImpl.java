@@ -101,6 +101,7 @@ public class SessionStorageRedisImpl implements SessionStorage {
 
     @Override
     public void logoutAll(String prefix, Long id) {
-        userRedisTemplate.opsForHash().delete(prefix, id);
+        assert id != null;
+        userRedisTemplate.opsForHash().delete(prefix, id.toString());
     }
 }
