@@ -72,6 +72,15 @@ public class CacheComponent {
         return raw;
     }
 
+    /**
+     * 使一个key在N秒后过期
+     * @param key
+     * @param expireSec
+     */
+    public void expireKey(String key, Integer expireSec) {
+        stringRedisTemplate.expire(key, expireSec, TimeUnit.SECONDS);
+    }
+
 
     /**
      * 放入对象/集合，进行序列化

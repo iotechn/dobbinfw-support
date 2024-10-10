@@ -1,6 +1,7 @@
 package com.dobbinsoft.fw.support.utils;
 
 import com.dobbinsoft.fw.core.Const;
+import com.dobbinsoft.fw.core.annotation.HttpParam;
 import com.dobbinsoft.fw.core.annotation.param.NotNull;
 import com.dobbinsoft.fw.core.annotation.param.Range;
 import com.dobbinsoft.fw.core.annotation.param.TextFormat;
@@ -33,9 +34,9 @@ public class ValidateUtils {
                 if (notNull != null) {
                     if (field.getType() == String.class && StringUtils.isBlank((String) field.get(object))) {
                         // String 传空格也算空
-                        throwParamCheckServiceException(notNull);
+                        throwParamCheckServiceException(notNull, field.getName());
                     } else if (ObjectUtils.isEmpty(field.get(object))) {
-                        throwParamCheckServiceException(notNull);
+                        throwParamCheckServiceException(notNull, field.getName());
                     }
                 }
                 // 2. 范围
@@ -48,28 +49,28 @@ public class ValidateUtils {
                             if (range != null) {
                                 int number = Integer.parseInt(numberObject.toString());
                                 if (number > range.max() || number < range.min()) {
-                                    throwParamCheckServiceException(range);
+                                    throwParamCheckServiceException(range, field.getName());
                                 }
                             }
                         } else if (fieldClazz == Long.class) {
                             if (range != null) {
                                 long number = Long.parseLong(numberObject.toString());
                                 if (number > range.max() || number < range.min()) {
-                                    throwParamCheckServiceException(range);
+                                    throwParamCheckServiceException(range, field.getName());
                                 }
                             }
                         } else if (fieldClazz == Float.class) {
                             if (range != null) {
                                 float number = Float.parseFloat(numberObject.toString());
                                 if (number > range.max() || number < range.min()) {
-                                    throwParamCheckServiceException(range);
+                                    throwParamCheckServiceException(range, field.getName());
                                 }
                             }
                         } else if (fieldClazz == Double.class) {
                             if (range != null) {
                                 double number = Double.parseDouble(numberObject.toString());
                                 if (number > range.max() || number < range.min()) {
-                                    throwParamCheckServiceException(range);
+                                    throwParamCheckServiceException(range, field.getName());
                                 }
                             }
                         }
@@ -110,8 +111,10 @@ public class ValidateUtils {
      */
     public static void checkParam(Class<?> type, Parameter methodParam, String target) throws ServiceException {
         NotNull notNull = type.getAnnotation(NotNull.class);
+        HttpParam httpParam = type.getAnnotation(HttpParam.class);
+        String paramName = httpParam != null ? httpParam.name() : methodParam.getName();
         if (notNull != null && StringUtils.isBlank(target)) {
-            throwParamCheckServiceException(notNull);
+            throwParamCheckServiceException(notNull, paramName);
         }
         if (StringUtils.isBlank(target)) {
             // 无需校验空参数
@@ -124,57 +127,57 @@ public class ValidateUtils {
                 if (StringUtils.isNotEmpty(regex)) {
                     //如果正则生效，则直接使用正则校验
                     if (!target.matches(regex)) {
-                        throwParamCheckServiceException(textFormat);
+                        throwParamCheckServiceException(textFormat, paramName);
                     }
                 } else {
                     boolean notChinese = textFormat.notChinese();
                     if (notChinese) {
                         if (target.matches("[\\u4e00-\\u9fa5]+")) {
-                            throwParamCheckServiceException(textFormat);
+                            throwParamCheckServiceException(textFormat, paramName);
                         }
                     }
 
                     String[] contains = textFormat.contains();
                     for (String contain : contains) {
                         if (!target.contains(contain)) {
-                            throwParamCheckServiceException(textFormat);
+                            throwParamCheckServiceException(textFormat, paramName);
                         }
                     }
 
                     String[] notContains = textFormat.notContains();
                     for (String notContain : notContains) {
                         if (target.contains(notContain)) {
-                            throwParamCheckServiceException(textFormat);
+                            throwParamCheckServiceException(textFormat, paramName);
                         }
                     }
 
                     String startWith = textFormat.startWith();
                     if (StringUtils.isNotEmpty(startWith)) {
                         if (!target.startsWith(startWith)) {
-                            throwParamCheckServiceException(textFormat);
+                            throwParamCheckServiceException(textFormat, paramName);
                         }
                     }
 
                     String endsWith = textFormat.endsWith();
                     if (StringUtils.isNotEmpty(target)) {
                         if (!target.endsWith(endsWith)) {
-                            throwParamCheckServiceException(textFormat);
+                            throwParamCheckServiceException(textFormat, paramName);
                         }
                     }
                     int targetLength = target.length();
                     int length = textFormat.length();
                     if (length != -1) {
                         if (targetLength != length) {
-                            throwParamCheckServiceException(textFormat);
+                            throwParamCheckServiceException(textFormat, paramName);
                         }
                     }
 
                     if (targetLength < textFormat.lengthMin()) {
-                        throwParamCheckServiceException(textFormat);
+                        throwParamCheckServiceException(textFormat, paramName);
                     }
 
                     if (targetLength > textFormat.lengthMax()) {
-                        throwParamCheckServiceException(textFormat);
+                        throwParamCheckServiceException(textFormat, paramName);
                     }
                 }
             }
@@ -183,7 +186,7 @@ public class ValidateUtils {
             int integer = Integer.parseInt(target);
             if (range != null) {
                 if (integer > range.max() || integer < range.min()) {
-                    throwParamCheckServiceException(range);
+                    throwParamCheckServiceException(range, paramName);
                 }
             }
         } else if (type == Long.class) {
@@ -191,7 +194,7 @@ public class ValidateUtils {
             if (range != null) {
                 long integer = Long.parseLong(target);
                 if (integer > range.max() || integer < range.min()) {
-                    throwParamCheckServiceException(range);
+                    throwParamCheckServiceException(range, paramName);
                 }
             }
         } else if (type == Float.class) {
@@ -199,7 +202,7 @@ public class ValidateUtils {
             if (range != null) {
                 float number = Float.parseFloat(target);
                 if (number > range.max() || number < range.min()) {
-                    throwParamCheckServiceException(range);
+                    throwParamCheckServiceException(range, paramName);
                 }
             }
         } else if (type == Double.class) {
@@ -207,18 +210,20 @@ public class ValidateUtils {
             if (range != null) {
                 double number = Double.parseDouble(target);
                 if (number > range.max() || number < range.min()) {
-                    throwParamCheckServiceException(range);
+                    throwParamCheckServiceException(range, paramName);
                 }
             }
         }
     }
 
-    public static void throwParamCheckServiceException(Annotation annotation) throws ServiceException {
+    public static void throwParamCheckServiceException(Annotation annotation, String fieldName) throws ServiceException {
         try {
             Method method = annotation.getClass().getMethod("message");
             Object res = method.invoke(annotation);
-            if (!org.springframework.util.ObjectUtils.isEmpty(res)) {
+            if (!ObjectUtils.isEmpty(res)) {
                 throw new ServiceException((String) res, CoreExceptionDefinition.LAUNCHER_PARAM_CHECK_FAILED.getCode());
+            } else if (StringUtils.isNotEmpty(fieldName)){
+                throw new ServiceException("参数校验失败:%s".formatted(fieldName), CoreExceptionDefinition.LAUNCHER_PARAM_CHECK_FAILED.getCode());
             } else {
                 throw new ServiceException(CoreExceptionDefinition.LAUNCHER_PARAM_CHECK_FAILED);
             }
