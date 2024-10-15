@@ -266,7 +266,7 @@ public class CacheComponent {
      */
     public <T> List<T> getHashMultiAsList(String key, Collection hashKeys, Class<T> clazz) {
         List<String> list = stringRedisTemplate.opsForHash().multiGet(getKey(key), hashKeys);
-        return list.stream().filter(item -> StringUtils.isNotEmpty(item) && !NULL_FLAG.equals(item)).map(item -> JacksonUtil.parseObject(item, clazz)).collect(Collectors.toList());
+        return list.stream().map(item -> (StringUtils.isNotEmpty(item) && !NULL_FLAG.equals(item)) ? JacksonUtil.parseObject(item, clazz) : null).collect(Collectors.toList());
     }
 
     /**

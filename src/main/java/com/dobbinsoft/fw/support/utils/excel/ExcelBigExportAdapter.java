@@ -15,7 +15,7 @@ public abstract class ExcelBigExportAdapter<T> {
      *
      * @return 允许返回空页，不允许返回null
      */
-    public abstract Page<T> getData();
+    public abstract Page<T> getData(int pageNo);
 
     /**
      * @return 保留N行Row在内存中。也就是滑动窗口大小，越大导出越快，占用内存越多。

@@ -2,6 +2,7 @@ package com.dobbinsoft.fw.support.model;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
+import com.dobbinsoft.fw.support.utils.CollectionUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.Getter;
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -159,13 +161,30 @@ public class Page<T> implements Serializable, IPage<T> {
         return page;
     }
 
+    // 列表假分页
+    public static <T> Page<T> divFake(int pageNo, int pageSize, List<T> list) {
+        List<List<T>> partition = CollectionUtils.partition(list, pageSize);
+        int index = pageNo - 1;
+        List<T> fakeItems;
+        if (partition.size() > index) {
+            fakeItems = partition.get(index);
+        } else {
+            fakeItems = Collections.emptyList();
+        }
+        return new Page<T>(fakeItems, pageNo, pageSize, list.size());
+    }
+
     public <R> Page<R> replace(List<R> items) {
         this.setItems((List) items);
         return (Page<R>) this;
     }
 
-    private static List<?> emptyArray = new ArrayList<>();
+    private static List<?> emptyArray = Collections.emptyList();
 
     public static Page emptyPage = new Page(emptyArray, 1, 15, 0);
+
+    public static final <T> List<T> emptyPage() {
+        return (List<T>) emptyPage;
+    }
 
 }

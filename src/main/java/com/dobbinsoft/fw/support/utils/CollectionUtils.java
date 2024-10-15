@@ -2,10 +2,7 @@ package com.dobbinsoft.fw.support.utils;
 
 import org.springframework.lang.Nullable;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CollectionUtils extends org.springframework.util.CollectionUtils {
 
@@ -27,6 +24,19 @@ public class CollectionUtils extends org.springframework.util.CollectionUtils {
 
     public static <O> List<O> intersection(List<? extends O> a, List<? extends O> b) {
         return (List<O>) org.apache.commons.collections4.CollectionUtils.intersection(a, b);
+    }
+
+    public static <T> List<List<T>> partition(List<T> list, int size) {
+        List<List<T>> result = new ArrayList<>();
+        if (list == null || size <= 0) {
+            return result;
+        }
+
+        for (int i = 0; i < list.size(); i += size) {
+            result.add(new ArrayList<>(list.subList(i, Math.min(i + size, list.size()))));
+        }
+
+        return result;
     }
 
 

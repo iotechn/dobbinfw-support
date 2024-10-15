@@ -1,6 +1,6 @@
 ![](https://doc-1324075299.cos.ap-guangzhou.myqcloud.com/dobbinfw/banner.jpg)
 
-[![Release Version](https://img.shields.io/badge/release-2.0.3-brightgreen.svg)](https://gitee.com/iotechn/dobbinfw-support) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://gitee.com/iotechn/unimall/pulls)
+[![Release Version](https://img.shields.io/badge/release-2.0.6-brightgreen.svg)](https://gitee.com/iotechn/dobbinfw-support) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://gitee.com/iotechn/unimall/pulls)
 
 #### 一、项目背景 
 

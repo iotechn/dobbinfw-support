@@ -32,6 +32,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class ExcelUtils {
@@ -403,8 +404,7 @@ public class ExcelUtils {
         try (SXSSFWorkbook workbook = new SXSSFWorkbook(200)) {
             Page<T> dataBuffer = null;
             do {
-                dataBuffer = adapter.getData();
-                adapter.getPageNo().incrementAndGet();
+                dataBuffer = adapter.getData(adapter.getPageNo().getAndIncrement());
                 if (!dataBuffer.hasPrevious()) {
                     // 首页，创建sheet， 设置表头
                     sheet = setSheet(clazz, workbook);
@@ -432,8 +432,7 @@ public class ExcelUtils {
         try (SXSSFWorkbook workbook = new SXSSFWorkbook(200)) {
             Page<T> dataBuffer = null;
             do {
-                dataBuffer = adapter.getData();
-                adapter.getPageNo().incrementAndGet();
+                dataBuffer = adapter.getData(adapter.getPageNo().getAndIncrement());
                 if (!dataBuffer.hasPrevious()) {
                     // 首页，创建sheet， 设置表头
                     sheet = setSheet(clazz, workbook);
