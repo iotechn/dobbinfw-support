@@ -730,7 +730,8 @@ public class ExcelUtils {
     }
 
     private static void setDataCellStyle(Workbook workbook, ExcelColumn excelColumn, Cell cell) {
-        CellStyle ifPresent = styleCache.getIfPresent(workbook.toString() + "___" + excelColumn.format());
+        String cacheKey = workbook.toString() + "___" + workbook.getActiveSheetIndex() + "___" + excelColumn.format();
+        CellStyle ifPresent = styleCache.getIfPresent(cacheKey);
         if (ifPresent != null) {
             cell.setCellStyle(ifPresent);
             return;
@@ -741,7 +742,7 @@ public class ExcelUtils {
             style.setDataFormat(fmt.getFormat(excelColumn.format()));
         }
         cell.setCellStyle(style);
-        styleCache.put(workbook + "___" + excelColumn.format(), style);
+        styleCache.put(cacheKey, style);
     }
 
     private static void setBrowser(HttpServletResponse response, Workbook workbook, String fileName) {
