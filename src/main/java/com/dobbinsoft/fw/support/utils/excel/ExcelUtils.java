@@ -165,8 +165,8 @@ public class ExcelUtils {
                 field.set(newInstance, ((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
             } else if (LocalDateTime.class.equals(field.getType())) {
                 field.set(newInstance, ((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
-            } else {
-                field.set(newInstance, value);
+            } else if (BigDecimal.class.equals(field.getType())){
+                field.set(newInstance, new BigDecimal(String.valueOf(value).trim()));
             }
         } catch (IllegalAccessException e) {
             log.error("【excel导入】clazz映射地址：{},{}", newInstance, "excel实体赋值类型转换异常！", e);
