@@ -419,6 +419,16 @@ public class CacheComponent {
         return stringRedisTemplate.opsForZSet().range(getKey(setName), 0 , n);
     }
 
+    /**
+     * 带score获取前N个
+     * @param setName
+     * @param n
+     * @return
+     */
+    public Set<ZSetOperations.TypedTuple<String>> getZSetTopNWithScore(String setName, int n) {
+        return stringRedisTemplate.opsForZSet().rangeWithScores(getKey(setName), 0, n);
+    }
+
 
     /**
      * TODO 保证原子性问题

@@ -1,5 +1,6 @@
 package com.dobbinsoft.fw.support.mq;
 
+import com.dobbinsoft.fw.support.component.CacheComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -19,6 +20,11 @@ public class RedisExpiredListener implements MessageListener, ApplicationContext
      * 姑且理解为: redis服务在key失效时(或失效后)通知到java服务某个key失效了, 那么在java中不可能得到这个redis-key对应的redis-value。
      */
     protected HashMap<Integer, DelayedMessageHandler> handlerRouter;
+
+    private RedisNotifyDelayedMessageQueueImpl queue;
+
+    @Autowired
+    private CacheComponent cacheComponent;
 
     private static final Logger logger = LoggerFactory.getLogger(RedisExpiredListener.class);
 
@@ -43,10 +49,15 @@ public class RedisExpiredListener implements MessageListener, ApplicationContext
         if (handler != null) {
             handler.handle(value.toString());
         }
+        // 将value从ZSet删除
+        String zSetKey = queue.assembleZSetKey(RedisNotifyDelayedMessageQueueImpl.DELAY_TASK_ZSET);
+        // 滑动指针，并对未处理的消息，进行重新处理
+        cacheComponent.delZSet(zSetKey, code + ":" + value);
     }
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.handlerRouter = (HashMap<Integer, DelayedMessageHandler>) applicationContext.getBean("messageHandleRouter");
+        this.queue = applicationContext.getBean(RedisNotifyDelayedMessageQueueImpl.class);
     }
 }

@@ -2,11 +2,11 @@ package com.dobbinsoft.fw.support.rate;
 
 import com.dobbinsoft.fw.core.annotation.HttpMethod;
 import com.dobbinsoft.fw.core.annotation.RateLimitType;
+import com.dobbinsoft.fw.support.utils.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.util.StringUtils;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -62,7 +62,7 @@ public class RateLimiterRedisSlidingWindow implements RateLimiter {
             TimeHolder timeHolder = new TimeHolder();
             Map<Object, Object> entries = lockRedisTemplate.opsForHash().entries(key);
             int sum = entries.values().stream().filter(item -> {
-                long v = new Long((String) item);
+                long v = Long.parseLong((String) item);
                 if (v > 1618284149838L) {
                     // 为了减少一次redis操作，hash表里面会存一个时间戳，大于这个阈值的就认为是时间戳
                     // 也可以通过KEY来，但是会在JAVA增加多次Hash操作，不划算
@@ -71,7 +71,7 @@ public class RateLimiterRedisSlidingWindow implements RateLimiter {
                 } else {
                     return true;
                 }
-            }).mapToInt(item -> new Integer((String) item)).sum();
+            }).mapToInt(item -> Integer.parseInt((String) item)).sum();
 
             // 系统时间
             long nowTime = System.currentTimeMillis();
@@ -100,7 +100,7 @@ public class RateLimiterRedisSlidingWindow implements RateLimiter {
                     if (i + delta > DIV) {
                         entries.put("K" + i, "0");
                     } else {
-                        Object o = entries.get("K" + (i + delta));
+                        String o = (String)entries.get("K" + (i + delta));
                         entries.put("K" + i, StringUtils.isEmpty(o) ? "0" : o);
                     }
                 }
@@ -114,7 +114,7 @@ public class RateLimiterRedisSlidingWindow implements RateLimiter {
             if (sum >= httpMethod.rate()) {
                 return false;
             }
-            lockRedisTemplate.opsForHash().increment(key, "K" + index, 1l);
+            lockRedisTemplate.opsForHash().increment(key, "K" + index, 1L);
 
         }
         return true;
