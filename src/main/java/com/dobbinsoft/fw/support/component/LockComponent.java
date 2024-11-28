@@ -38,9 +38,9 @@ public class LockComponent {
      * @return
      */
     public boolean tryLock(String key, Integer timeoutSec) {
-        return lockRedisTemplate.opsForValue().setIfAbsent(
+        return Boolean.TRUE.equals(lockRedisTemplate.opsForValue().setIfAbsent(
                 LOCK_PREFIX + getKey(key),
-                System.currentTimeMillis() + "", Duration.ofSeconds(timeoutSec));
+                System.currentTimeMillis() + "", Duration.ofSeconds(timeoutSec)));
     }
 
     /**
@@ -54,7 +54,7 @@ public class LockComponent {
         boolean res;
         long startTime = System.currentTimeMillis();
         do {
-            res = lockRedisTemplate.opsForValue().setIfAbsent(LOCK_PREFIX + getKey(key),  startTime+ "", Duration.ofSeconds(timeoutSec));
+            res = Boolean.TRUE.equals(lockRedisTemplate.opsForValue().setIfAbsent(LOCK_PREFIX + getKey(key), startTime + "", Duration.ofSeconds(timeoutSec)));
             try {
                 Thread.sleep(20);
             } catch (InterruptedException e) {
@@ -71,7 +71,7 @@ public class LockComponent {
         for (String key : keys) {
             map.put(getKey(key), now);
         }
-        boolean suc = lockRedisTemplate.opsForValue().multiSetIfAbsent(map);
+        boolean suc = Boolean.TRUE.equals(lockRedisTemplate.opsForValue().multiSetIfAbsent(map));
         if (suc) {
             keys.forEach(item -> {
                 lockRedisTemplate.expire(item, timeoutSec, TimeUnit.SECONDS);

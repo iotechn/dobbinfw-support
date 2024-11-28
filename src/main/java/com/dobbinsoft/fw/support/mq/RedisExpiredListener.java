@@ -50,7 +50,7 @@ public class RedisExpiredListener implements MessageListener, ApplicationContext
             handler.handle(value.toString());
         }
         // 将value从ZSet删除
-        String zSetKey = queue.assembleZSetKey(RedisNotifyDelayedMessageQueueImpl.DELAY_TASK_ZSET);
+        String zSetKey = queue.assembleZSetKey(RedisNotifyDelayedMessageQueueImpl.DELAYED_TASK_ZSET);
         // 滑动指针，并对未处理的消息，进行重新处理
         cacheComponent.delZSet(zSetKey, code + ":" + value);
     }

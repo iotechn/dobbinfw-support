@@ -12,6 +12,7 @@ import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.GeoOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -429,28 +430,68 @@ public class CacheComponent {
         return stringRedisTemplate.opsForZSet().rangeWithScores(getKey(setName), 0, n);
     }
 
+    /**
+     * 获取积分小于N的全部值
+     * @param setName
+     * @param score
+     * @return
+     */
+    public Set<String> getZSetScoreLessThan(String setName, double score) {
+        return stringRedisTemplate.opsForZSet().rangeByScore(setName, Double.NEGATIVE_INFINITY, score);
+    }
+
 
     /**
-     * TODO 保证原子性问题
      * 向一个set中添加数据
      * @param key
      * @param member
      * @param expireSec
      */
     public void putSetRaw(String key, String member, Integer expireSec) {
-        stringRedisTemplate.opsForSet().add(getKey(key), member);
-        stringRedisTemplate.expire(getKey(key), expireSec, TimeUnit.SECONDS);
+        String redisKey = getKey(key);
+
+        String luaScript =
+               """
+               if redis.call('SADD', KEYS[1], ARGV[1]) == 1 then
+                   return redis.call('EXPIRE', KEYS[1], ARGV[2])
+               else
+                   return 0
+               end
+               """;
+
+        // 执行 Lua 脚本
+        stringRedisTemplate.execute(new DefaultRedisScript<>(luaScript, Long.class),
+                Collections.singletonList(redisKey),
+                member, expireSec.toString());
     }
 
     /**
-     * TODO 保证原子性问题
      * @param key
      * @param set
      * @param expireSec
      */
     public void putSetRawAll(String key, String[] set, Integer expireSec) {
-        stringRedisTemplate.opsForSet().add(getKey(key), set);
-        stringRedisTemplate.expire(getKey(key), expireSec, TimeUnit.SECONDS);
+        String redisKey = getKey(key);
+
+        // 定义 Lua 脚本
+        String luaScript =
+                """
+                for i = 1, #ARGV - 1 do
+                    redis.call('SADD', KEYS[1], ARGV[i])
+                end
+                return redis.call('EXPIRE', KEYS[1], ARGV[#ARGV])
+                """;
+
+        // 将过期时间作为最后一个参数传递
+        List<String> args = new ArrayList<>(Arrays.asList(set));
+        args.add(expireSec.toString());
+
+        // 执行 Lua 脚本
+        stringRedisTemplate.execute(
+                new DefaultRedisScript<>(luaScript, Long.class),
+                Collections.singletonList(redisKey),
+                args.toArray()
+        );
     }
 
     public void removeSetRaw(String key, String member) {
@@ -458,7 +499,7 @@ public class CacheComponent {
     }
 
     public boolean isSetMember(String key, String member) {
-        return stringRedisTemplate.opsForSet().isMember(getKey(key), member);
+        return Boolean.TRUE.equals(stringRedisTemplate.opsForSet().isMember(getKey(key), member));
     }
 
     public boolean addPoint(String key, Point point, String member) {
@@ -498,7 +539,7 @@ public class CacheComponent {
      * @return
      */
     public boolean hasKey(String key) {
-        return stringRedisTemplate.hasKey(getKey(key));
+        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(getKey(key)));
     }
 
 
@@ -519,6 +560,33 @@ public class CacheComponent {
      */
     public long sizeHyperLogLog(String key) {
         return stringRedisTemplate.opsForHyperLogLog().size(key);
+    }
+
+    /**
+     * 写入KV ZSet双写，用于可靠延迟队列
+     *
+     * @param key 写入Key
+     * @param setName 写入ZSet Name
+     * @param score ZSet分数
+     * @param value 数值
+     * @param expireSec 过期时间
+     */
+    public void putRawAndZSet(String key, String setName, double score, String value, Integer expireSec) {
+        String redisKey = getKey(key);
+        String redisSetName = getKey(setName);
+        String finalValue = (value == null ? NULL_FLAG : value);
+
+        // 定义 Lua 脚本
+        String luaScript =
+                "redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[2]) " +
+                "redis.call('ZADD', KEYS[2], ARGV[3], ARGV[1]) ";
+
+        // 执行脚本
+        stringRedisTemplate.execute(
+                new DefaultRedisScript<>(luaScript, Long.class),
+                Arrays.asList(redisKey, redisSetName), // KEYS
+                finalValue, expireSec.toString(), String.valueOf(score) // ARGV
+        );
     }
 
     /**
@@ -562,9 +630,7 @@ public class CacheComponent {
 
     public Collection<String> getKeys(Collection<String> keys) {
         if (beforeGetCacheKey != null) {
-            return keys.stream().map(item -> {
-                return beforeGetCacheKey.getKey(item);
-            }).collect(Collectors.toList());
+            return keys.stream().map(item -> beforeGetCacheKey.getKey(item)).collect(Collectors.toList());
         }
         return keys;
     }
