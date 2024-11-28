@@ -15,6 +15,14 @@ public class CollectionUtils extends org.springframework.util.CollectionUtils {
     }
 
     public static boolean isEqualCollection(Collection<?> a, Collection<?> b) {
+        if (a == null && b == null) {
+            // 两个都为空
+            return true;
+        }
+        if (a == null || b == null) {
+            // 两个有一个为空
+            return false;
+        }
         return org.apache.commons.collections4.CollectionUtils.isEqualCollection(a, b);
     }
 
