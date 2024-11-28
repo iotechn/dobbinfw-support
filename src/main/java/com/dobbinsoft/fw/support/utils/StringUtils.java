@@ -4,6 +4,21 @@ import java.util.UUID;
 
 public class StringUtils extends org.apache.commons.lang3.StringUtils {
 
+
+    /**
+     * 去除字符串中的所有非英文字符和非半角符号和非数字。
+     *
+     * @param input 原始字符串
+     * @return 去除非英文和非半角符号后的字符串
+     */
+    public static String removeNonEnglish(String input) {
+        if (input == null) {
+            return null;
+        }
+        // 只保留a-z, A-Z和常见的半角符号
+        return input.replaceAll("[^a-zA-Z0-9\\p{Punct}\\s]", "");
+    }
+
     public static String toGetterMethod(String fieldName) {
         // 首先检查输入字符串是否为空或null
         if (fieldName == null || fieldName.isEmpty()) {
