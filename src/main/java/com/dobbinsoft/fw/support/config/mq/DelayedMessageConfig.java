@@ -1,6 +1,9 @@
 package com.dobbinsoft.fw.support.config.mq;
 
-import com.dobbinsoft.fw.support.mq.*;
+import com.dobbinsoft.fw.support.mq.DelayedMessageHandler;
+import com.dobbinsoft.fw.support.mq.DelayedMessageQueue;
+import com.dobbinsoft.fw.support.mq.RedisExpiredListener;
+import com.dobbinsoft.fw.support.mq.RedisNotifyDelayedMessageQueueImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -42,11 +45,6 @@ public class DelayedMessageConfig {
     @Bean
     public DelayedMessageQueue delayedMessageQueue(){
         return new RedisNotifyDelayedMessageQueueImpl();
-    }
-
-    @Bean
-    public RedisDelayedQuartz redisDelayedQuartz() {
-        return new RedisDelayedQuartz();
     }
 
 

@@ -8,7 +8,8 @@ public interface LogRecordPersistent {
     /**
      * @param content 日志正文
      * @param success 操作是否成功
+     * @param logRefer Log引用
      */
-    public void write(String content, boolean success);
+    public void write(String content, boolean success, LogRecordContext.LogRefer logRefer);
 
 }

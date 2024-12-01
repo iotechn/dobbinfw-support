@@ -1,5 +1,8 @@
 package com.dobbinsoft.fw.support.log;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,9 +15,21 @@ public class LogRecordContext {
 
     private static final ThreadLocal<Map<String, Object>> context = ThreadLocal.withInitial(HashMap::new);
 
+    private static final ThreadLocal<LogRefer> logReferContext = ThreadLocal.withInitial(LogRefer::new);
+
+
     public static void put(String key, Object object) {
         Map<String, Object> map = context.get();
         map.put(key, object);
+    }
+
+    public static void putRefer(Integer referType, Long referId) {
+        logReferContext.get().setReferType(referType);
+        logReferContext.get().setReferId(referId);
+    }
+
+    public static LogRefer getRefer() {
+        return logReferContext.get();
     }
 
     public static Map<String, Object> get() {
@@ -23,6 +38,17 @@ public class LogRecordContext {
 
     public static void clear() {
         context.remove();
+        logReferContext.remove();
+    }
+
+    @Getter
+    @Setter
+    public static class LogRefer {
+
+        private Integer referType;
+
+        private Long referId;
+
     }
 
 }

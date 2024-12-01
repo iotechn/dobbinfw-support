@@ -64,7 +64,8 @@ public class LogRecordAspect {
                 String value = parser.parseExpression(logRecord.value(), new TemplateParserContext()).getValue(context, String.class);
                 log.info("[业务日志] success={}", value);
                 if (logRecordPersistent != null) {
-                    logRecordPersistent.write(value, true);
+                    LogRecordContext.LogRefer refer = LogRecordContext.getRefer();
+                    logRecordPersistent.write(value, true, refer);
                 }
             } catch (Exception e) {
                 Map<String, Object> customContext = LogRecordContext.get();
@@ -81,7 +82,7 @@ public class LogRecordAspect {
                     log.error("[业务日志] 异常上下文： CustomContext={}", (customContext == null ? "{}" : JacksonUtil.toJSONString(customContext)));
                     log.info("[业务日志] fail={}", value);
                     if (logRecordPersistent != null) {
-                        logRecordPersistent.write(value, false);
+                        logRecordPersistent.write(value, false, LogRecordContext.getRefer());
                     }
                 }
             } catch (Exception ex) {
