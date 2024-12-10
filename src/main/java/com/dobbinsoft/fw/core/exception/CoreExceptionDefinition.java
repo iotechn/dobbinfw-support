@@ -59,6 +59,9 @@ public class CoreExceptionDefinition {
     public static final ServiceExceptionDefinition LAUNCHER_RPC_SIGN_INCORRECT =
             new ServiceExceptionDefinition(10009, "远程调用签名错误");
 
+    public static final ServiceExceptionDefinition LAUNCHER_ONLY_SSE_SUPPORT =
+            new ServiceExceptionDefinition(10010, "sse url不正确");
+
 
     public static ServiceExceptionDefinition buildVariableException(ServiceExceptionDefinition definition, String ...args) {
         String msg = definition.getMsg();

@@ -33,17 +33,17 @@ public class SSEPublisher {
 
     /**
      * 发送一条SSE消息
-     * @param userKey
+     * @param identityOwnerKey
      * @param message
      */
-    public void send(String userKey, String message) {
+    public void send(String identityOwnerKey, String message) {
         try {
-            SseEmitter sseEmitter = clients.get(userKey);
+            SseEmitter sseEmitter = clients.get(identityOwnerKey);
             if (sseEmitter != null) {
                 sseEmitter.send(message);
             } else {
                 SSEShareDTO sseShareDTO = new SSEShareDTO();
-                sseShareDTO.setUserKey(userKey);
+                sseShareDTO.setIdentityOwnerKey(identityOwnerKey);
                 sseShareDTO.setMessage(message);
                 broadcaster.publish(Const.BROADCAST_CHANNEL_EVENT_SSE_SHARE, JacksonUtil.toJSONString(sseShareDTO));
             }
@@ -54,11 +54,11 @@ public class SSEPublisher {
 
     public void send(SSEShareDTO sseShareDTO) {
         try {
-            SseEmitter sseEmitter = clients.get(sseShareDTO.getUserKey());
+            SseEmitter sseEmitter = clients.get(sseShareDTO.getIdentityOwnerKey());
             if (sseEmitter != null) {
                 sseEmitter.send(sseShareDTO.getMessage());
             } else {
-                log.info("[SSE] 目标客户端不在线: {}", sseShareDTO.getUserKey());
+                log.info("[SSE] 目标客户端不在线: {}", sseShareDTO.getIdentityOwnerKey());
             }
         } catch (IOException e) {
             log.error("[SSE] 网络错误{}", e.getMessage());
@@ -67,15 +67,24 @@ public class SSEPublisher {
 
     /**
      *
-     * @param userKey
+     * @param identityOwnerKey
      * @param sseEmitter
      */
-    public void join(String userKey, SseEmitter sseEmitter) {
+    public void join(String identityOwnerKey, SseEmitter sseEmitter) {
         sseEmitter.onCompletion(() -> {
-            log.info("[SSE] 完成通信 userKey:{}", userKey);
-            clients.remove(userKey);
+            log.info("[SSE] 完成通信 identityOwnerKey:{}", identityOwnerKey);
+            clients.remove(identityOwnerKey);
         });
 
+        sseEmitter.onError((e) -> {
+            log.error("[SSE] 异常 identityOwnerKey:{}", identityOwnerKey, e);
+            clients.remove(identityOwnerKey);
+        });
+
+        sseEmitter.onTimeout(() -> {
+            log.info("[SSE] 通信超时 identityOwnerKey:{}", identityOwnerKey);
+            clients.remove(identityOwnerKey);
+        });
     }
 
 }

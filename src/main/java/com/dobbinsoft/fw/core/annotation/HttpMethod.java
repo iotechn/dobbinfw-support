@@ -31,4 +31,6 @@ public @interface HttpMethod {
     String exportFileName() default "";
     // 不打HTTP日志
     boolean noLog() default false;
+    // 文档返回示例
+    String[] examples() default {};
 }

@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class SSEShareDTO {
 
-    private String userKey;
+    private String identityOwnerKey;
 
     private String message;
 
