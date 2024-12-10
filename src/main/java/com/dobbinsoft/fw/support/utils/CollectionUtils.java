@@ -1,6 +1,7 @@
 package com.dobbinsoft.fw.support.utils;
 
 import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
 
 import java.util.*;
 
@@ -12,6 +13,13 @@ public class CollectionUtils extends org.springframework.util.CollectionUtils {
 
     public static boolean isNotEmpty(@Nullable Collection<?> collection) {
         return !CollectionUtils.isEmpty(collection);
+    }
+
+    public static boolean contains(@Nullable Collection<?> collection, Object element) {
+        if (collection != null) {
+            return contains(collection.iterator(), element);
+        }
+        return false;
     }
 
     public static boolean isEqualCollection(Collection<?> a, Collection<?> b) {
