@@ -21,7 +21,7 @@ public class RedisExpiredListener implements MessageListener, ApplicationContext
      */
     protected HashMap<Integer, DelayedMessageHandler> handlerRouter;
 
-    private RedisNotifyDelayedMessageQueueImpl queue;
+    protected RedisNotifyDelayedMessageQueueImpl queue;
 
     @Autowired
     private CacheComponent cacheComponent;
@@ -30,7 +30,8 @@ public class RedisExpiredListener implements MessageListener, ApplicationContext
 
     @Override
     public void onMessage(Message message, byte[] bytes) {
-        String expiredKey = message.toString();
+        // 后续删除要用
+        final String expiredKey = message.toString();
         // TASK:CODE:VALUE结构
         String[] split = expiredKey.split(":");
         if (split.length < 2 || !expiredKey.startsWith("TASK:")) {
@@ -49,10 +50,11 @@ public class RedisExpiredListener implements MessageListener, ApplicationContext
         if (handler != null) {
             handler.handle(value.toString());
         }
+
         // 将value从ZSet删除
         String zSetKey = queue.assembleZSetKey(RedisNotifyDelayedMessageQueueImpl.DELAYED_TASK_ZSET);
         // 滑动指针，并对未处理的消息，进行重新处理
-        cacheComponent.delZSet(zSetKey, code + ":" + value);
+        cacheComponent.delZSet(zSetKey, expiredKey);
     }
 
     @Override

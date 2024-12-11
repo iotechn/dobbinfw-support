@@ -437,7 +437,7 @@ public class CacheComponent {
      * @return
      */
     public Set<String> getZSetScoreLessThan(String setName, double score) {
-        return stringRedisTemplate.opsForZSet().rangeByScore(setName, Double.NEGATIVE_INFINITY, score);
+        return stringRedisTemplate.opsForZSet().rangeByScore(getKey(setName), Double.NEGATIVE_INFINITY, score);
     }
 
 
@@ -562,6 +562,15 @@ public class CacheComponent {
         return stringRedisTemplate.opsForHyperLogLog().size(key);
     }
 
+
+    public void putRawAndZSet(String key, String setName, double score, String value, Integer expireSec) {
+        putRawAndZSet(key, setName, score, value, expireSec, true);
+    }
+
+    public void putRawAndZSetNoProcess(String key, String setName, double score, String value, Integer expireSec) {
+        putRawAndZSet(key, setName, score, value, expireSec, false);
+    }
+
     /**
      * 写入KV ZSet双写，用于可靠延迟队列
      *
@@ -570,10 +579,11 @@ public class CacheComponent {
      * @param score ZSet分数
      * @param value 数值
      * @param expireSec 过期时间
+     * @param processKey 是否处理key
      */
-    public void putRawAndZSet(String key, String setName, double score, String value, Integer expireSec) {
-        String redisKey = getKey(key);
-        String redisSetName = getKey(setName);
+    private void putRawAndZSet(String key, String setName, double score, String value, Integer expireSec, boolean processKey) {
+        String redisKey = processKey ? getKey(key) : key;
+        String redisSetName = processKey ? getKey(setName) : setName;
         String finalValue = (value == null ? NULL_FLAG : value);
 
         // 定义 Lua 脚本
