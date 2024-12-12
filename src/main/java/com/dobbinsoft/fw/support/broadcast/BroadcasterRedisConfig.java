@@ -12,8 +12,8 @@ import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 public class BroadcasterRedisConfig {
 
     @Bean
-    public RedisMessageListenerContainer container(RedisConnectionFactory defaultLettuceConnectionFactory,
-                                            MessageListenerAdapter listenerAdapter) {
+    public RedisMessageListenerContainer redisMessageListenerContainer(RedisConnectionFactory defaultLettuceConnectionFactory,
+                                                                       MessageListenerAdapter listenerAdapter) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(defaultLettuceConnectionFactory);
         container.addMessageListener(listenerAdapter, new PatternTopic(Const.BROADCAST_CHANNEL));

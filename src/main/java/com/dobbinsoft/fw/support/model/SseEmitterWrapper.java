@@ -12,4 +12,11 @@ public class SseEmitterWrapper {
 
     private SseEmitter sseEmitter;
 
+    public static SseEmitterWrapper build(String identityOwnerKey, SseEmitter sseEmitter) {
+        SseEmitterWrapper wrapper = new SseEmitterWrapper();
+        wrapper.setIdentityOwnerKey(identityOwnerKey);
+        wrapper.setSseEmitter(sseEmitter);
+        return wrapper;
+    }
+
 }

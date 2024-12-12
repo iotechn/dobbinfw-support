@@ -2,6 +2,7 @@ package com.dobbinsoft.fw.support.sse;
 
 import com.dobbinsoft.fw.core.Const;
 import com.dobbinsoft.fw.support.broadcast.Broadcaster;
+import com.dobbinsoft.fw.support.model.SseEmitterWrapper;
 import com.dobbinsoft.fw.support.utils.JacksonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +71,7 @@ public class SSEPublisher {
      * @param identityOwnerKey
      * @param sseEmitter
      */
-    public void join(String identityOwnerKey, SseEmitter sseEmitter) {
+    public SseEmitterWrapper join(String identityOwnerKey, SseEmitter sseEmitter) {
         sseEmitter.onCompletion(() -> {
             log.info("[SSE] 完成通信 identityOwnerKey:{}", identityOwnerKey);
             clients.remove(identityOwnerKey);
@@ -85,6 +86,7 @@ public class SSEPublisher {
             log.info("[SSE] 通信超时 identityOwnerKey:{}", identityOwnerKey);
             clients.remove(identityOwnerKey);
         });
+        return SseEmitterWrapper.build(identityOwnerKey, sseEmitter);
     }
 
 }
