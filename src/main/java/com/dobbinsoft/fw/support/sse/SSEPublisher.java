@@ -42,6 +42,7 @@ public class SSEPublisher {
             SseEmitter sseEmitter = clients.get(identityOwnerKey);
             if (sseEmitter != null) {
                 sseEmitter.send(message);
+                log.info("[SSE] sendTo: {} with message: {}", identityOwnerKey, message);
             } else {
                 SSEShareDTO sseShareDTO = new SSEShareDTO();
                 sseShareDTO.setIdentityOwnerKey(identityOwnerKey);
@@ -53,17 +54,28 @@ public class SSEPublisher {
         }
     }
 
-    public void send(SSEShareDTO sseShareDTO) {
+    void send(SSEShareDTO sseShareDTO) {
         try {
             SseEmitter sseEmitter = clients.get(sseShareDTO.getIdentityOwnerKey());
             if (sseEmitter != null) {
                 sseEmitter.send(sseShareDTO.getMessage());
+                log.info("[SSE] sendTo: {} with message: {}", sseShareDTO.getIdentityOwnerKey(), sseShareDTO.getMessage());
             } else {
-                log.info("[SSE] 目标客户端不在线: {}", sseShareDTO.getIdentityOwnerKey());
+                log.info("[SSE] 目标客户端不在线或不在本机: {}", sseShareDTO.getIdentityOwnerKey());
             }
         } catch (IOException e) {
             log.error("[SSE] 网络错误{}", e.getMessage());
         }
+    }
+
+
+    /**
+     *
+     * @param identityOwnerKey
+     * @return
+     */
+    public SseEmitterWrapper join(String identityOwnerKey) {
+        return join(identityOwnerKey, new SseEmitter(0L));
     }
 
     /**
@@ -86,6 +98,8 @@ public class SSEPublisher {
             log.info("[SSE] 通信超时 identityOwnerKey:{}", identityOwnerKey);
             clients.remove(identityOwnerKey);
         });
+
+        clients.put(identityOwnerKey, sseEmitter);
         return SseEmitterWrapper.build(identityOwnerKey, sseEmitter);
     }
 
