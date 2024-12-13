@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 public class MachineComponent {
 
     @Autowired
-    private StringRedisTemplate lockRedisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
 
     private Integer machineNo;
 
@@ -30,9 +30,9 @@ public class MachineComponent {
             synchronized (MachineComponent.class) {
                 if (this.machineNo == null) {
                     for (int i = 1; i < Integer.MAX_VALUE; i++) {
-                        Boolean suc = lockRedisTemplate.opsForValue().setIfAbsent(MACHINE_PREFIX + i, "" + i);
+                        Boolean suc = stringRedisTemplate.opsForValue().setIfAbsent(MACHINE_PREFIX + i, "" + i);
                         if (Boolean.TRUE.equals(suc)) {
-                            lockRedisTemplate.expire(MACHINE_PREFIX + i, 15, TimeUnit.MINUTES);
+                            stringRedisTemplate.expire(MACHINE_PREFIX + i, 15, TimeUnit.MINUTES);
                             this.machineNo = i;
                             break;
                         }
@@ -50,14 +50,14 @@ public class MachineComponent {
         if (this.machineNo == null) {
             throw new RuntimeException("续约失败，请先获取机器号");
         }
-        lockRedisTemplate.expire(MACHINE_PREFIX + this.machineNo, 15, TimeUnit.MINUTES);
+        stringRedisTemplate.expire(MACHINE_PREFIX + this.machineNo, 15, TimeUnit.MINUTES);
     }
 
     /**
      * 主动释放机器号
      */
     public void release() {
-        lockRedisTemplate.delete(MACHINE_PREFIX + this.machineNo);
+        stringRedisTemplate.delete(MACHINE_PREFIX + this.machineNo);
     }
 
 

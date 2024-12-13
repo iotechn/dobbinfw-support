@@ -23,6 +23,9 @@ public class RedisExpiredListener implements MessageListener, ApplicationContext
 
     protected RedisNotifyDelayedMessageQueueImpl queue;
 
+    @Autowired(required = false)
+    private DelayedMessageRedisKeyParser delayedMessageRedisKeyParser;
+
     @Autowired
     private CacheComponent cacheComponent;
 
@@ -33,7 +36,12 @@ public class RedisExpiredListener implements MessageListener, ApplicationContext
         // 后续删除要用
         final String expiredKey = message.toString();
         // TASK:CODE:VALUE结构
-        String[] split = expiredKey.split(":");
+        String[] split;
+        if (delayedMessageRedisKeyParser != null) {
+            split = delayedMessageRedisKeyParser.parse(expiredKey);
+        } else {
+            split = expiredKey.split(":");
+        }
         if (split.length < 2 || !expiredKey.startsWith("TASK:")) {
             return;
         }

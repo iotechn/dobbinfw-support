@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 public class SessionStorageRedisImpl implements SessionStorage {
 
     @Autowired
-    private StringRedisTemplate userRedisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
 
     private boolean mutex = false;
 
@@ -28,34 +28,34 @@ public class SessionStorageRedisImpl implements SessionStorage {
         if (StringUtils.isEmpty(token)) {
             throw new RuntimeException("Token不能为空");
         }
-        userRedisTemplate.opsForValue().set(prefix + token, identityOwner.getId().toString(), expire, TimeUnit.SECONDS);
+        stringRedisTemplate.opsForValue().set(prefix + token, identityOwner.getId().toString(), expire, TimeUnit.SECONDS);
         SessionWrapper wrapper = new SessionWrapper();
         wrapper.setIdentityOwnerJson(JacksonUtil.toJSONString(identityOwner));
         wrapper.setToken(token);
-        userRedisTemplate.opsForHash().put(prefix, identityOwner.getId().toString(), JacksonUtil.toJSONString(wrapper));
+        stringRedisTemplate.opsForHash().put(prefix, identityOwner.getId().toString(), JacksonUtil.toJSONString(wrapper));
     }
 
     @Override
     public void refresh(String prefix, IdentityOwner identityOwner) {
-        Object o = userRedisTemplate.opsForHash().get(prefix, identityOwner.getId().toString());
+        Object o = stringRedisTemplate.opsForHash().get(prefix, identityOwner.getId().toString());
         if (ObjectUtils.isNotEmpty(o)) {
             SessionWrapper wrapper = JacksonUtil.parseObject(o.toString(), SessionWrapper.class);
             assert wrapper != null;
             wrapper.setIdentityOwnerJson(JacksonUtil.toJSONString(identityOwner));
-            userRedisTemplate.opsForHash().put(prefix, identityOwner.getId().toString(), JacksonUtil.toJSONString(wrapper));
+            stringRedisTemplate.opsForHash().put(prefix, identityOwner.getId().toString(), JacksonUtil.toJSONString(wrapper));
         }
     }
 
     @Override
     public <T extends IdentityOwner> T get(String prefix, String token, Class<T> clazz) {
-        String idStr = userRedisTemplate.opsForValue().get(prefix + token);
+        String idStr = stringRedisTemplate.opsForValue().get(prefix + token);
         if (StringUtils.isEmpty(idStr)) {
             return null;
         }
-        Object o = userRedisTemplate.opsForHash().get(prefix, idStr);
+        Object o = stringRedisTemplate.opsForHash().get(prefix, idStr);
         if (o == null) {
             // 说明已经登出全部了
-            userRedisTemplate.delete(prefix + token);
+            stringRedisTemplate.delete(prefix + token);
             return null;
         }
         SessionWrapper wrapper = JacksonUtil.parseObject(o.toString(), SessionWrapper.class);
@@ -67,7 +67,7 @@ public class SessionStorageRedisImpl implements SessionStorage {
         if (this.mutex) {
             if (!StringUtils.equals(wrapper.getToken(), token)) {
                 // 互斥
-                userRedisTemplate.delete(prefix + token);
+                stringRedisTemplate.delete(prefix + token);
                 return null;
             }
         }
@@ -77,7 +77,7 @@ public class SessionStorageRedisImpl implements SessionStorage {
 
     @Override
     public <T extends IdentityOwner> T get(String prefix, Long id, Class<T> clazz) {
-        Object o = userRedisTemplate.opsForHash().get(prefix, id.toString());
+        Object o = stringRedisTemplate.opsForHash().get(prefix, id.toString());
         if (o == null) {
             return null;
         }
@@ -91,17 +91,17 @@ public class SessionStorageRedisImpl implements SessionStorage {
 
     @Override
     public void renew(String prefix, String token, Integer expire) {
-        userRedisTemplate.expire(prefix + token, expire, TimeUnit.SECONDS);
+        stringRedisTemplate.expire(prefix + token, expire, TimeUnit.SECONDS);
     }
 
     @Override
     public void logout(String prefix, String token) {
-        userRedisTemplate.delete(prefix + token);
+        stringRedisTemplate.delete(prefix + token);
     }
 
     @Override
     public void logoutAll(String prefix, Long id) {
         assert id != null;
-        userRedisTemplate.opsForHash().delete(prefix, id.toString());
+        stringRedisTemplate.opsForHash().delete(prefix, id.toString());
     }
 }

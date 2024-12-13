@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class LockComponent {
 
     @Autowired
-    private StringRedisTemplate lockRedisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
 
     @Autowired(required = false)
     private BeforeGetLockKey beforeGetLockKey;
@@ -38,7 +38,7 @@ public class LockComponent {
      * @return
      */
     public boolean tryLock(String key, Integer timeoutSec) {
-        return Boolean.TRUE.equals(lockRedisTemplate.opsForValue().setIfAbsent(
+        return Boolean.TRUE.equals(stringRedisTemplate.opsForValue().setIfAbsent(
                 LOCK_PREFIX + getKey(key),
                 System.currentTimeMillis() + "", Duration.ofSeconds(timeoutSec)));
     }
@@ -54,7 +54,7 @@ public class LockComponent {
         boolean res;
         long startTime = System.currentTimeMillis();
         do {
-            res = Boolean.TRUE.equals(lockRedisTemplate.opsForValue().setIfAbsent(LOCK_PREFIX + getKey(key), startTime + "", Duration.ofSeconds(timeoutSec)));
+            res = Boolean.TRUE.equals(stringRedisTemplate.opsForValue().setIfAbsent(LOCK_PREFIX + getKey(key), startTime + "", Duration.ofSeconds(timeoutSec)));
             try {
                 Thread.sleep(20);
             } catch (InterruptedException e) {
@@ -71,29 +71,29 @@ public class LockComponent {
         for (String key : keys) {
             map.put(getKey(key), now);
         }
-        boolean suc = Boolean.TRUE.equals(lockRedisTemplate.opsForValue().multiSetIfAbsent(map));
+        boolean suc = Boolean.TRUE.equals(stringRedisTemplate.opsForValue().multiSetIfAbsent(map));
         if (suc) {
             keys.forEach(item -> {
-                lockRedisTemplate.expire(item, timeoutSec, TimeUnit.SECONDS);
+                stringRedisTemplate.expire(item, timeoutSec, TimeUnit.SECONDS);
             });
         }
         return suc;
     }
 
     public void release(String key) {
-        lockRedisTemplate.delete(LOCK_PREFIX + getKey(key));
+        stringRedisTemplate.delete(LOCK_PREFIX + getKey(key));
     }
 
     public boolean hashPut(String table, String key) {
-        return lockRedisTemplate.opsForHash().putIfAbsent(table, getKey(key), key);
+        return stringRedisTemplate.opsForHash().putIfAbsent(table, getKey(key), key);
     }
 
     public boolean hashContains(String table, String key) {
-        return lockRedisTemplate.opsForHash().hasKey(table, getKey(key));
+        return stringRedisTemplate.opsForHash().hasKey(table, getKey(key));
     }
 
     public void hashDel(String table, String key) {
-        lockRedisTemplate.opsForHash().delete(table, getKey(key));
+        stringRedisTemplate.opsForHash().delete(table, getKey(key));
     }
 
     private String getKey(String key) {

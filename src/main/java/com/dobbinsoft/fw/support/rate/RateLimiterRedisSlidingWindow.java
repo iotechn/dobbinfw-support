@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 public class RateLimiterRedisSlidingWindow implements RateLimiter {
 
     @Autowired
-    private StringRedisTemplate lockRedisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
 
     private static final String SLIDING_BUCKET = "RT_SLIDING_";
 
@@ -60,7 +60,7 @@ public class RateLimiterRedisSlidingWindow implements RateLimiter {
             // 小窗
             int smallWindow = bigWindow / DIV;
             TimeHolder timeHolder = new TimeHolder();
-            Map<Object, Object> entries = lockRedisTemplate.opsForHash().entries(key);
+            Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(key);
             int sum = entries.values().stream().filter(item -> {
                 long v = Long.parseLong((String) item);
                 if (v > 1618284149838L) {
@@ -82,9 +82,9 @@ public class RateLimiterRedisSlidingWindow implements RateLimiter {
             int index;
             if (indexRaw - (DIV - 1) > DIV) {
                 // 全部清空
-                lockRedisTemplate.delete(key);
-                lockRedisTemplate.opsForHash().put(key, TIMESTAMP_KEY, nowTime + "");
-                lockRedisTemplate.expire(key, 12, TimeUnit.HOURS);
+                stringRedisTemplate.delete(key);
+                stringRedisTemplate.opsForHash().put(key, TIMESTAMP_KEY, nowTime + "");
+                stringRedisTemplate.expire(key, 12, TimeUnit.HOURS);
                 sum = 0;
                 index = 0;
             } else if (indexRaw > DIV - 1){
@@ -105,7 +105,7 @@ public class RateLimiterRedisSlidingWindow implements RateLimiter {
                     }
                 }
                 entries.put(TIMESTAMP_KEY, nowTime + "");
-                lockRedisTemplate.opsForHash().putAll(key, entries);
+                stringRedisTemplate.opsForHash().putAll(key, entries);
                 index = DIV - 1;
             } else {
                 index = (int) indexRaw;
@@ -114,7 +114,7 @@ public class RateLimiterRedisSlidingWindow implements RateLimiter {
             if (sum >= httpMethod.rate()) {
                 return false;
             }
-            lockRedisTemplate.opsForHash().increment(key, "K" + index, 1L);
+            stringRedisTemplate.opsForHash().increment(key, "K" + index, 1L);
 
         }
         return true;

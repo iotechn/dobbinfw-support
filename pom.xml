@@ -95,12 +95,6 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
-        <!-- 连接池 For Redis -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-pool2</artifactId>
-        </dependency>
-
         <!-- Web 起步依赖 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

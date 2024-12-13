@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 public class RateLimiterRedisCount implements RateLimiter {
 
     @Autowired
-    private StringRedisTemplate lockRedisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
 
     private static final String COUNTER_BUCKET = "RT_COUNTER_";
 
@@ -29,8 +29,8 @@ public class RateLimiterRedisCount implements RateLimiter {
             }
             key = key + "_S_" + httpMethod.rateWindow();
 
-            lockRedisTemplate.opsForValue().setIfAbsent(key, "0", httpMethod.rateWindow(), TimeUnit.SECONDS);
-            Long increment = lockRedisTemplate.opsForValue().increment(key, 1l);
+            stringRedisTemplate.opsForValue().setIfAbsent(key, "0", httpMethod.rateWindow(), TimeUnit.SECONDS);
+            Long increment = stringRedisTemplate.opsForValue().increment(key, 1l);
             // 计数器清0：当键值过期时，计数器清0
             // 计数器限流，存在临界问题
             // eg. 一个资源若允许60秒访问1000次。用户可以在00:59这一秒请求1000次，在01:00这一秒请求1000次，会导致在2秒内访问2000次，远超60秒1000次的设计。
