@@ -60,7 +60,10 @@ public class CoreExceptionDefinition {
             new ServiceExceptionDefinition(10009, "远程调用签名错误");
 
     public static final ServiceExceptionDefinition LAUNCHER_ONLY_SSE_SUPPORT =
-            new ServiceExceptionDefinition(10010, "sse url不正确");
+            new ServiceExceptionDefinition(10010, "SSE调用URL不正确");
+
+    public static final ServiceExceptionDefinition LAUNCHER_NOT_SUPPORT =
+            new ServiceExceptionDefinition(10011, "SSE尚未开启");
 
 
     public static ServiceExceptionDefinition buildVariableException(ServiceExceptionDefinition definition, String ...args) {

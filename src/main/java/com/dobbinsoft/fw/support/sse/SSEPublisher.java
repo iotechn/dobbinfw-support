@@ -6,7 +6,6 @@ import com.dobbinsoft.fw.support.model.SseEmitterWrapper;
 import com.dobbinsoft.fw.support.utils.JacksonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
@@ -23,10 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * 2. 生命周期，2.1. 用户登录直到退出程序。 2.2. 一次会话，例如GPT的一次请求。
  */
 @Slf4j
-@Component
 public class SSEPublisher {
 
-    @Autowired
+    @Autowired(required = false)
     private Broadcaster broadcaster;
 
     // 用户身份的唯一key
@@ -43,11 +41,13 @@ public class SSEPublisher {
             if (sseEmitter != null) {
                 sseEmitter.send(message);
                 log.info("[SSE] sendTo: {} with message: {}", identityOwnerKey, message);
-            } else {
+            } else if (broadcaster != null){
                 SSEShareDTO sseShareDTO = new SSEShareDTO();
                 sseShareDTO.setIdentityOwnerKey(identityOwnerKey);
                 sseShareDTO.setMessage(message);
                 broadcaster.publish(Const.BROADCAST_CHANNEL_EVENT_SSE_SHARE, JacksonUtil.toJSONString(sseShareDTO));
+            } else {
+                log.info("[SSE] 目标客户端不在线: {}", identityOwnerKey);
             }
         } catch (IOException e) {
             log.error("[SSE] 网络错误{}", e.getMessage());

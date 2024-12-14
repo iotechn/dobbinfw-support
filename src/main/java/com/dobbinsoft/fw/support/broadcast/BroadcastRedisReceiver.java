@@ -13,7 +13,7 @@ public class BroadcastRedisReceiver {
     @Autowired(required = false)
     private BroadcastListener broadcastListener;
 
-    @Autowired
+    @Autowired(required = false)
     private SSEBroadcastShareListener sseBroadcastShareListener;
 
     public void onMessage(String data, String channel) {
