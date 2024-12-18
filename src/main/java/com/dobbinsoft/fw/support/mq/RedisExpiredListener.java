@@ -42,7 +42,7 @@ public class RedisExpiredListener implements MessageListener, ApplicationContext
         } else {
             split = expiredKey.split(":");
         }
-        if (split.length < 2 || !expiredKey.startsWith("TASK:")) {
+        if (split.length < 2 || split[0].equals("TASK")) {
             return;
         }
         logger.info("[Redis键失效通知] key=" + expiredKey);

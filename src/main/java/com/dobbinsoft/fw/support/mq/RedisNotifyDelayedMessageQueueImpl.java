@@ -40,7 +40,7 @@ public class RedisNotifyDelayedMessageQueueImpl implements DelayedMessageQueue {
         }
         String keyValue = assembleKey(code, value);
         // 使用lua同时写入KV 和 ZSet
-        cacheComponent.putRawAndZSet(keyValue, assembleZSetKey(DELAYED_TASK_ZSET), System.currentTimeMillis(), cacheComponent.getKey(keyValue), delay);
+        cacheComponent.putRawAndZSet(keyValue, assembleZSetKey(DELAYED_TASK_ZSET), System.currentTimeMillis() + (1000L * delay), cacheComponent.getKey(keyValue), delay);
         return true;
     }
 
@@ -55,7 +55,7 @@ public class RedisNotifyDelayedMessageQueueImpl implements DelayedMessageQueue {
             delay = (int) duration.getSeconds();
         }
         String keyValue = assembleKey(code, value);
-        cacheComponent.putRawAndZSet(keyValue, assembleZSetKey(DELAYED_TASK_ZSET), System.currentTimeMillis(), cacheComponent.getKey(keyValue), delay);
+        cacheComponent.putRawAndZSet(keyValue, assembleZSetKey(DELAYED_TASK_ZSET), System.currentTimeMillis() + (1000L * delay), cacheComponent.getKey(keyValue), delay);
         return true;
     }
 
