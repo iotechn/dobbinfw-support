@@ -82,6 +82,15 @@ public class AliStorageClient extends S3StorageClient implements StorageClient, 
         }
     }
 
+    @Override
+    public String appendVideoStyleForKey(String key, String style) {
+        if (key.contains("?x-oss-process=video/")) {
+            return key + "/" + style;
+        } else {
+            return key + "?x-oss-process=video/" + style;
+        }
+    }
+
     // 阿里云兼容不了S3
     @Override
     public InputStream download(String key) {

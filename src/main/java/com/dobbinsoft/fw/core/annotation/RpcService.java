@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 public @interface RpcService {
 
     // 作为消费者的SystemId
-    String systemId() default "";
+    String systemId();
 
     String group();
 

@@ -58,4 +58,9 @@ public class QCloudStorageClient extends S3StorageClient implements StorageClien
     public String appendStyleForKey(String key, String style) {
         throw new RuntimeException("Not Support Now");
     }
+
+    @Override
+    public String appendVideoStyleForKey(String key, String style) {
+        throw new RuntimeException("Not Support Now");
+    }
 }

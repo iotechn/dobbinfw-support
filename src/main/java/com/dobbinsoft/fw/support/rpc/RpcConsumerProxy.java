@@ -22,8 +22,11 @@ import okhttp3.Request;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.IOException;
 import java.lang.reflect.*;
 import java.math.BigDecimal;
+import java.net.URL;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -39,7 +42,12 @@ public class RpcConsumerProxy implements InitializingBean {
     @Autowired(required = false)
     private RpcContextCommonProvider rpcContextCommonProvider;
 
-    private final OkHttpClient okHttpClient = new OkHttpClient();
+    private final OkHttpClient okHttpClient = new OkHttpClient
+            .Builder()
+            .connectTimeout(Duration.ofSeconds(15))
+            .callTimeout(Duration.ofSeconds(15))
+            .readTimeout(Duration.ofSeconds(15))
+            .build();
 
     private final Map<String, FwRpcConsumerProperties.RpcProvider> providerMap = new HashMap<>();
 
@@ -100,9 +108,9 @@ public class RpcConsumerProxy implements InitializingBean {
                 }
                 FwRpcConsumerProperties.RpcProvider rpcProvider = providerMap.get(rpcService.systemId());
                 if (rpcProvider == null) {
-                    throw new RuntimeException("[RPC消费者代理] 调用失败，SystemID未配置: %s".formatted(rpcProvider.getSystemId()));
+                    throw new ServiceException("[RPC消费者代理] 调用失败，SystemID未配置: %s".formatted(rpcService.systemId()));
                 }
-                Map<String, String> header = new HashMap<>();
+                Map<String, Object> header = new HashMap<>();
                 header.put("systemId", fwRpcConsumerProperties.getSystemId());
                 // 此操作会将通用context写入到context上下文中
                 if (rpcContextCommonProvider != null) {
@@ -155,6 +163,9 @@ public class RpcConsumerProxy implements InitializingBean {
                 }
                 log.error("[RPC消费者代理] 服务异常：group: {}; method: {}, error message: {}", rpcService.group(), methodName, jsonNode.get("errmsg").asText());
                 throw new ServiceException(jsonNode.get("errmsg").asText(), jsonNode.get("errno").asInt());
+            } catch (IOException e) {
+                log.error("[RPC消费者代理] 上游网络不通, msg: {}",e.getMessage());
+                throw new ServiceException("RPC网络异常 systemId:%s".formatted(rpcService.systemId()));
             } finally {
                 RpcContextHolder.clear();
             }

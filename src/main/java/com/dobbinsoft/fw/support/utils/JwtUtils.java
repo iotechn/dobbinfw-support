@@ -27,14 +27,15 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Map;
 
 @Slf4j
 public class JwtUtils {
 
     public static String createRSA256(
-            Map<String, String> headers,
-            Map<String, String> payload,
+            Map<String, Object> headers,
+            Map<String, Object> payload,
             Integer expireSeconds, String privateKey) throws InvalidKeySpecException {
         Algorithm algorithm = Algorithm.RSA256(null, (RSAPrivateKey) getPrivateKey(privateKey));
         return createCommon(headers, payload, expireSeconds, algorithm);
@@ -52,8 +53,8 @@ public class JwtUtils {
     }
 
     public static String createHMAC256(
-            Map<String, String> headers,
-            Map<String, String> payload,
+            Map<String, Object> headers,
+            Map<String, Object> payload,
             Integer expireSeconds, String secret) {
         return createCommon(headers, payload, expireSeconds, Algorithm.HMAC256(secret));
     }
@@ -63,8 +64,8 @@ public class JwtUtils {
     }
 
     private static String createCommon(
-            Map<String, String> headers,
-            Map<String, String> payload,
+            Map<String, Object> headers,
+            Map<String, Object> payload,
             Integer expireSeconds, Algorithm algorithm) {
         // 过期时间，60s
         Calendar expires = Calendar.getInstance();
@@ -72,10 +73,26 @@ public class JwtUtils {
 
         // 第一部分Header
         JWTCreator.Builder builder = JWT.create()
-                .withHeader((Map)headers);
+                .withHeader(headers);
 
         // 第二部分Payload
-        payload.forEach(builder::withClaim);
+        payload.forEach((k, v) -> {
+            if (v instanceof String) {
+                builder.withClaim(k, (String) v);
+            } else if (v instanceof Boolean) {
+                builder.withClaim(k, (Boolean) v);
+            } else if (v instanceof Integer) {
+                builder.withClaim(k, (Integer) v);
+            } else if (v instanceof Long) {
+                builder.withClaim(k, (Long) v);
+            } else if (v instanceof Date) {
+                builder.withClaim(k, (Date) v);
+            } else if (v instanceof Double) {
+                builder.withClaim(k, (Double) v);
+            } else if (v != null) {
+                builder.withClaim(k, v.toString());
+            }
+        });
 
         // 第三部分Signature
         return builder

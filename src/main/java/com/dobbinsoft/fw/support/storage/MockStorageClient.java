@@ -56,6 +56,11 @@ public class MockStorageClient implements StorageClient {
     }
 
     @Override
+    public String appendVideoStyleForKey(String key, String style) {
+        return key;
+    }
+
+    @Override
     public String getPrivateUrl(String key, Integer expireSec) {
         throw new RuntimeException("不支持私有保存");
     }

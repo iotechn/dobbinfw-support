@@ -44,11 +44,18 @@ public interface StorageClient {
     public boolean deletePrivate(String key);
 
     /**
-     * 为 key 或公开的URL拼接样式
+     * 为 key 或公开的图片URL拼接样式
      * @param key
      * @param style
      */
     public String appendStyleForKey(String key, String style);
+
+    /**
+     * 为 key 或公开的视频URL拼接样式
+     * @param key
+     * @param style
+     */
+    public String appendVideoStyleForKey(String key, String style);
 
     /**
      * 获取私有对象临时访问URL
