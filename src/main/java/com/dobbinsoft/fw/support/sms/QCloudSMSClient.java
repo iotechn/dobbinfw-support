@@ -141,7 +141,7 @@ public class QCloudSMSClient implements SMSClient, InitializingBean {
                 .header("X-TC-RequestClient", "SDK_JAVA_BAREBONE")
                 .header("Authorization", auth)
                 .url(endpoint)
-                .post(RequestBody.create(MediaType.parse(contentType), body))
+                .post(RequestBody.create(body, MediaType.parse(contentType)))
                 .build();
     }
 

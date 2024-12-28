@@ -11,6 +11,15 @@ public class CoreExceptionDefinition {
     public static final ServiceExceptionDefinition THIRD_PART_IO_EXCEPTION =
             new ServiceExceptionDefinition(0, "第三方服务网络异常");
 
+    public static final ServiceExceptionDefinition LAMBDA_NO_ANNOTATION =
+            new ServiceExceptionDefinition(1001, "行为参数化接口必须为RPC接口");
+
+    public static final ServiceExceptionDefinition LAMBDA_LEAK_PROPERTIES =
+            new ServiceExceptionDefinition(1002, "行为接口缺少RPC Properties");
+
+    public static final ServiceExceptionDefinition LAMBDA_PARAM_JUST_BASIC =
+            new ServiceExceptionDefinition(1003, "行为接口参数只支持基本类型");
+
     public static final ServiceExceptionDefinition LAUNCHER_API_REGISTER_FAILED =
             new ServiceExceptionDefinition(9999, "api注册失败");
 

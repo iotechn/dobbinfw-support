@@ -43,6 +43,7 @@ public class Const {
 
     public static final int CACHE_ONE_YEAR = 60 * 60 * 24 * 365;
 
+    // 传递服务签名
     public static final String RPC_HEADER = "RPCHEADER";
 
     public static final String RPC_CONTEXT_JSON = "RPCCONTEXT";
