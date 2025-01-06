@@ -59,8 +59,11 @@ https://central.sonatype.com/artifact/com.dobbinsoft/fw-support/versions
 
 [3.13. 统计PV/UV](./doc/13.tracking.md)
 
-[3.14. 工具类(Utils)](./doc/14.utils)
+[3.14. 工具类(Utils)](./doc/14.utils.md)
 
+[3.15. 集群内广播(Broadcast)](./doc/15.broadcast.md)
+
+[3.16. 服务器事件(SSE)](./doc/16.sse.md)
 
 #### 四、贡献 & 社区
 若Support包不能满足您的业务需求，您可以直接在仓库中发布Pull Request。本项目欢迎所有开发者一起维护，并永久开源。

@@ -30,6 +30,9 @@ public class LambdaDTO {
 
     private Map<String, String> headers;
 
+    // 执行完后自动添加上去
+    private String callResult;
+
 
 
     @Getter
@@ -57,10 +60,12 @@ public class LambdaDTO {
             headers.forEach(builder::addHeader);
         }
         try {
-            return client.newCall(builder.build())
+            String callResult = client.newCall(builder.build())
                     .execute()
                     .body()
                     .string();
+            this.callResult = callResult;
+            return callResult;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

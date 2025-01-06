@@ -12,6 +12,8 @@ public class SseEmitterWrapper {
 
     private SseEmitter sseEmitter;
 
+    private SseEmitterWrapper() {}
+
     public static SseEmitterWrapper build(String identityOwnerKey, SseEmitter sseEmitter) {
         SseEmitterWrapper wrapper = new SseEmitterWrapper();
         wrapper.setIdentityOwnerKey(identityOwnerKey);
