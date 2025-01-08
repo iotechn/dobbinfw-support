@@ -75,6 +75,11 @@ public class SSEPublisher {
      * @return
      */
     public SseEmitterWrapper join(String identityOwnerKey) {
+        SseEmitter existSseEmitter = clients.get(identityOwnerKey);
+        if (existSseEmitter != null) {
+            // 防止内存溢出，前端可能会一直调接口去监听连接
+            return SseEmitterWrapper.build(identityOwnerKey, existSseEmitter);
+        }
         return join(identityOwnerKey, new SseEmitter(0L));
     }
 
@@ -83,7 +88,7 @@ public class SSEPublisher {
      * @param identityOwnerKey
      * @param sseEmitter
      */
-    public SseEmitterWrapper join(String identityOwnerKey, SseEmitter sseEmitter) {
+    private SseEmitterWrapper join(String identityOwnerKey, SseEmitter sseEmitter) {
         sseEmitter.onCompletion(() -> {
             log.info("[SSE] 完成通信 identityOwnerKey:{}", identityOwnerKey);
             clients.remove(identityOwnerKey);
@@ -98,7 +103,6 @@ public class SSEPublisher {
             log.info("[SSE] 通信超时 identityOwnerKey:{}", identityOwnerKey);
             clients.remove(identityOwnerKey);
         });
-
         clients.put(identityOwnerKey, sseEmitter);
         return SseEmitterWrapper.build(identityOwnerKey, sseEmitter);
     }

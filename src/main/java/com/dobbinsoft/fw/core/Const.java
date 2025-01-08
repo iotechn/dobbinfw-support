@@ -66,6 +66,7 @@ public class Const {
     public static final String BROADCAST_CHANNEL = "BROADCAST_CHANNEL";
 
     public static final String BROADCAST_CHANNEL_EVENT_SSE_SHARE = "BROADCAST_CHANNEL_EVENT_SSE_SHARE";
+    public static final String BROADCAST_CHANNEL_EVENT_WS_SHARE = "BROADCAST_CHANNEL_EVENT_WS_SHARE";
 
 
 }

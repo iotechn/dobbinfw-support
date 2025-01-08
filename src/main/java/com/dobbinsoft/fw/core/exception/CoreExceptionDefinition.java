@@ -74,6 +74,9 @@ public class CoreExceptionDefinition {
     public static final ServiceExceptionDefinition LAUNCHER_NOT_SUPPORT =
             new ServiceExceptionDefinition(10011, "SSE尚未开启");
 
+    public static final ServiceExceptionDefinition LAUNCHER_ONLY_WS_SUPPORT =
+            new ServiceExceptionDefinition(10012, "WS调用URL不正确");
+
 
     public static ServiceExceptionDefinition buildVariableException(ServiceExceptionDefinition definition, String ...args) {
         String msg = definition.getMsg();
