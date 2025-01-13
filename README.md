@@ -65,5 +65,6 @@ https://central.sonatype.com/artifact/com.dobbinsoft/fw-support/versions
 
 [3.16. 服务器事件(SSE)](./doc/16.sse.md)
 
+[3.17. 全双工通信(Websocket)](./doc/17.websocket.md)
 #### 四、贡献 & 社区
 若Support包不能满足您的业务需求，您可以直接在仓库中发布Pull Request。本项目欢迎所有开发者一起维护，并永久开源。
