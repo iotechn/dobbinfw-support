@@ -574,6 +574,9 @@ public class CacheComponent {
     /**
      * 写入KV ZSet双写，用于可靠延迟队列
      *
+     * 使用前你需要了解redis的哈希标签机制，特别是在redis为集群时
+     * {some_tag} <-- 需要在键名中加上{任意hashtag}，确保SET和ZSET都调度到同一槽中
+     *
      * @param key 写入Key
      * @param setName 写入ZSet Name
      * @param score ZSet分数

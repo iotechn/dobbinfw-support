@@ -35,14 +35,14 @@ public class RedisExpiredListener implements MessageListener, ApplicationContext
     public void onMessage(Message message, byte[] bytes) {
         // 后续删除要用
         final String expiredKey = message.toString();
-        // TASK:CODE:VALUE结构
+        // {delayed_mq}:TASK:CODE:VALUE结构
         String[] split;
         if (delayedMessageRedisKeyParser != null) {
             split = delayedMessageRedisKeyParser.parse(expiredKey);
         } else {
             split = expiredKey.split(":");
         }
-        if (split.length < 2 || !split[0].equals("TASK")) {
+        if (split.length < 2 || !split[0].equals(RedisNotifyDelayedMessageQueueImpl.DELAYED_TASK_TASK_PREFIX)) {
             return;
         }
         logger.info("[Redis键失效通知] key=" + expiredKey);

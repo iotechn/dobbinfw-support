@@ -13,7 +13,10 @@ import java.util.Set;
 @Slf4j
 public class RedisNotifyDelayedMessageQueueImpl implements DelayedMessageQueue {
 
-    public static final String DELAYED_TASK_ZSET = "IGNORE_TENEMENT:DELAY_TASK_ZSET";
+    private static final String DELAYED_MQ_HASH_TAG = "{delayed_mq}";
+
+    public static final String DELAYED_TASK_ZSET = "IGNORE_TENEMENT:%s_DELAY_TASK_ZSET".formatted(DELAYED_MQ_HASH_TAG);
+    public static final String DELAYED_TASK_TASK_PREFIX = "%s_TASK".formatted(DELAYED_MQ_HASH_TAG);
 
     @Autowired
     private CacheComponent cacheComponent;
@@ -76,7 +79,8 @@ public class RedisNotifyDelayedMessageQueueImpl implements DelayedMessageQueue {
         if (value == null) {
             value = "";
         }
-        StringBuilder sb = new StringBuilder("TASK:");
+        StringBuilder sb = new StringBuilder(DELAYED_TASK_TASK_PREFIX);
+        sb.append(":");
         sb.append(code);
         sb.append(":");
         sb.append(value);

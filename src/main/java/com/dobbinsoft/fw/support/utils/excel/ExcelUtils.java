@@ -657,6 +657,10 @@ public class ExcelUtils {
                                 Cell cell = row.createCell(excelColumn.index());
                                 cell.setCellValue((Integer) value);
                                 setDataCellStyle(workbook, excelColumn, cell);
+                            } else if (field.getType().equals(Long.class)) {
+                                Cell cell = row.createCell(excelColumn.index());
+                                cell.setCellValue((Long) value);
+                                setDataCellStyle(workbook, excelColumn, cell);
                             } else if (field.getType().equals(ExcelImage.class)) {
                                 // 如果是字节数组，则尝试从单元格中读取图片
                                 ExcelImage excelImage = (ExcelImage) value;
@@ -671,14 +675,14 @@ public class ExcelUtils {
                                 setDataCellStyle(workbook, excelColumn, cell);
                             }
                         } catch (Exception e) {
-                            log.error("单元格赋值失败！", e);
+                            log.error("[Excel 导出] 单元格赋值失败 column:{}, value:{}", excelColumn.title(), value, e);
                         }
                     }
                 }
             }
-            log.info("表格赋值成功！");
+            log.info("[Excel 导出] 表格赋值 完成，总影响行数:{}", data.size());
         } catch (Exception e) {
-            log.error("表格赋值失败！", e);
+            log.error("[Excel 导出] 表格赋值 异常", e);
         }
     }
 
