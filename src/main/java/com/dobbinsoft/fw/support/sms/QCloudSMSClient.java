@@ -8,11 +8,12 @@ import com.dobbinsoft.fw.support.sms.models.QCloudSendSMSResponse;
 import com.dobbinsoft.fw.support.utils.CollectionUtils;
 import com.dobbinsoft.fw.support.utils.JacksonUtil;
 import com.dobbinsoft.fw.support.utils.StringUtils;
-import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -36,13 +37,13 @@ public class QCloudSMSClient implements SMSClient, InitializingBean {
     @Autowired
     private FwSMSProperties properties;
 
-    private OkHttpClient client;
+    private WebClient client;
 
     private static final Logger logger = LoggerFactory.getLogger(QCloudSMSClient.class);
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        this.client = new OkHttpClient();
+        this.client = WebClient.create();
     }
 
     @Override
@@ -116,33 +117,38 @@ public class QCloudSMSClient implements SMSClient, InitializingBean {
             String body, String region, String token
     ) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
 
-        Request request = buildRequest(secretId, secretKey, service, version, action, body, region, token);
-        Response response = client.newCall(request).execute();
-        return response.body().string();
-    }
 
-    public Request buildRequest(
-            String secretId, String secretKey,
-            String service, String version, String action,
-            String body, String region, String token
-    ) throws NoSuchAlgorithmException, InvalidKeyException {
+        // 构建必要的参数
         String host = "sms.tencentcloudapi.com";
         String endpoint = "https://" + host;
         String contentType = "application/json; charset=utf-8";
         String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
         String auth = getAuth(secretId, secretKey, host, contentType, timestamp, body);
-        return new Request.Builder()
-                .header("Host", host)
-                .header("X-TC-Timestamp", timestamp)
-                .header("X-TC-Version", version)
-                .header("X-TC-Action", action)
-                .header("X-TC-Region", region)
-                .header("X-TC-Token", token)
-                .header("X-TC-RequestClient", "SDK_JAVA_BAREBONE")
-                .header("Authorization", auth)
-                .url(endpoint)
-                .post(RequestBody.create(body, MediaType.parse(contentType)))
-                .build();
+
+        try {
+            // 发起POST请求，并同步等待响应
+            return client.post()
+                    .uri(endpoint)
+                    .header("Host", host)
+                    .header("X-TC-Timestamp", timestamp)
+                    .header("X-TC-Version", version)
+                    .header("X-TC-Action", action)
+                    .header("X-TC-Region", region)
+                    .header("X-TC-Token", token)
+                    .header("X-TC-RequestClient", "SDK_JAVA_BAREBONE")
+                    .header("Authorization", auth)
+                    .header("Content-Type", contentType)
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+        } catch (WebClientResponseException e) {
+            // 处理HTTP错误响应
+            throw new IOException("[QCloud SMS] HTTP错误: " + e.getStatusCode() + " " + e.getResponseBodyAsString(), e);
+        } catch (Exception e) {
+            // 处理其他可能的异常，例如网络错误
+            throw new IOException("[QCloud SMS] 请求失败", e);
+        }
     }
 
     private String getAuth(

@@ -5,13 +5,11 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.dobbinsoft.fw.support.properties.FwObjectStorageProperties;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 /**
@@ -23,7 +21,7 @@ public class AliStorageClient extends S3StorageClient implements StorageClient, 
     @Autowired
     private FwObjectStorageProperties properties;
 
-    private volatile OkHttpClient okHttpClient;
+    private volatile WebClient webClient;
 
 
     @Override
@@ -95,20 +93,22 @@ public class AliStorageClient extends S3StorageClient implements StorageClient, 
     @Override
     public InputStream download(String key) {
         String privateUrl = getPrivateUrl(key, 360);
-        if (okHttpClient == null) {
+        if (webClient == null) {
             synchronized (this) {
-                if (okHttpClient == null) {
-                    okHttpClient = new OkHttpClient();
+                if (webClient == null) {
+                    webClient = WebClient.create();
                 }
             }
         }
-        try {
-            Response response = okHttpClient.newCall(new Request.Builder()
-                    .url(privateUrl)
-                    .build()).execute();
-            return response.body().byteStream();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        byte[] responseBytes = webClient.get()
+                .uri(privateUrl)
+                .retrieve()
+                .bodyToMono(byte[].class)
+                .block();
+
+        if (responseBytes == null) {
+            throw new RuntimeException("响应体为空");
         }
+        return new ByteArrayInputStream(responseBytes);
     }
 }
