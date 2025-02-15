@@ -1,7 +1,11 @@
 package com.dobbinsoft.fw.core.model;
 
 import com.dobbinsoft.fw.core.annotation.doc.ApiField;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.springframework.http.MediaType;
+
+import java.util.Map;
 
 /**
  * Description: 统一对外回复封装
@@ -15,18 +19,15 @@ public class GatewayResponse<T> {
     private String errmsg;
     @ApiField(description = "返回数据")
     private T data;
-    @ApiField(description = "HttpContentType")
-    private String contentType;
     @ApiField(description = "系统时间戳")
     private long timestamp;
 
-    public static <T> GatewayResponse<T> success(T t, String contentType) {
-        GatewayResponse<T> response = new GatewayResponse<>();
-        response.setErrno(200);
-        response.setData(t);
-        response.setContentType(contentType);
-        response.setTimestamp(System.currentTimeMillis());
-        return response;
-    }
+    @JsonIgnore
+    @ApiField(description = "HttpContentType")
+    private MediaType contentType;
+    @JsonIgnore
+    @ApiField(description = "前端忽略")
+    private Map<String, String> httpHeaders;
+
 }
 

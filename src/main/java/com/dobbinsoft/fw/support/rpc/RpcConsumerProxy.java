@@ -62,6 +62,17 @@ public class RpcConsumerProxy implements InitializingBean {
     }
 
     public <T> T getInstance(Class<T> interfaceClass) {
+        return getInstance(interfaceClass, true);
+    }
+
+    /**
+     *
+     * @param interfaceClass 接口Class
+     * @param sync 是否异步，若为true，Object为Mono， 否则直接返回对象
+     * @return
+     * @param <T>
+     */
+    public <T> T getInstance(Class<T> interfaceClass, boolean sync) {
         RpcService rpcService = interfaceClass.getAnnotation(RpcService.class);
         if (rpcService == null) {
             throw new RuntimeException("[RPC消费者代理] 创建失败，未注解@RpcService: %s".formatted(interfaceClass.getName()));
@@ -119,6 +130,13 @@ public class RpcConsumerProxy implements InitializingBean {
 
             Class<?> returnType = method.getReturnType();
             Type genericReturnType = method.getGenericReturnType();
+            if (returnType == Mono.class && genericReturnType instanceof ParameterizedType) {
+                // 使用泛型
+                returnType = (Class<?>) ((ParameterizedType) genericReturnType).getActualTypeArguments()[0];
+                genericReturnType = returnType;
+            }
+            Class<?> finalReturnType = returnType;
+            Type finalGenericReturnType = genericReturnType;
             return webClient
                     .post()
                     .uri(rpcProvider.getUrl())
@@ -130,27 +148,28 @@ public class RpcConsumerProxy implements InitializingBean {
                     .bodyToMono(JsonNode.class)
                     .flatMap(jsonNode -> {
                         try {
+                            // 无法解决流式请求的问题，目前也没有此应用场景
                             if (jsonNode.get("errno").asInt() == 200) {
-                                if (genericReturnType instanceof ParameterizedType) {
+                                if (finalGenericReturnType instanceof ParameterizedType) {
                                     TypeFactory typeFactory = JacksonUtil.objectMapper.getTypeFactory();
-                                    JavaType javaType = typeFactory.constructType(genericReturnType);
+                                    JavaType javaType = typeFactory.constructType(finalGenericReturnType);
                                     // 使用JavaType进行反序列化
                                     return Mono.just(JacksonUtil.objectMapper.convertValue(jsonNode.get("data"), javaType));
-                                } else if (Const.IGNORE_PARAM_LIST.contains(returnType)) {
-                                    Constructor<?> constructor = returnType.getConstructor(String.class);
+                                } else if (Const.IGNORE_PARAM_LIST.contains(finalReturnType)) {
+                                    Constructor<?> constructor = finalReturnType.getConstructor(String.class);
                                     return Mono.just(constructor.newInstance(jsonNode.get("data").asText()));
-                                } else if (returnType == LocalDateTime.class) {
+                                } else if (finalReturnType == LocalDateTime.class) {
                                     return Mono.just(TimeUtils.stringToLocalDateTime(jsonNode.get("data").asText()));
-                                } else if (returnType == LocalDate.class) {
+                                } else if (finalReturnType == LocalDate.class) {
                                     return Mono.just(TimeUtils.stringToLocalDate(jsonNode.get("data").asText()));
-                                } else if (returnType == LocalTime.class) {
+                                } else if (finalReturnType == LocalTime.class) {
                                     return Mono.just(TimeUtils.stringToLocalTime(jsonNode.get("data").asText()));
-                                } else if (returnType == Date.class) {
+                                } else if (finalReturnType == Date.class) {
                                     return Mono.just(TimeUtils.stringToDate(jsonNode.get("data").asText()));
-                                } else if (returnType == BigDecimal.class) {
+                                } else if (finalReturnType == BigDecimal.class) {
                                     return Mono.just(new BigDecimal(jsonNode.get("data").asText()));
                                 } else {
-                                    return Mono.just(JacksonUtil.objectMapper.convertValue(jsonNode.get("data"), returnType));
+                                    return Mono.just(JacksonUtil.objectMapper.convertValue(jsonNode.get("data"), finalReturnType));
                                 }
                             }
                             log.error("[RPC消费者代理] 服务异常：group: {}; method: {}, error message: {}", rpcService.group(), methodName, jsonNode.get("errmsg").asText());

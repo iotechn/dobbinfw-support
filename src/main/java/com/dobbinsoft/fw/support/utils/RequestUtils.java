@@ -1,6 +1,10 @@
 package com.dobbinsoft.fw.support.utils;
 
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.web.reactive.function.server.ServerRequest;
+
+import java.util.List;
 
 public class RequestUtils {
 
@@ -9,31 +13,42 @@ public class RequestUtils {
      * @param request 请求
      * @return
      */
-    public static String getClientIp(HttpServletRequest request) {
-        String ipAddress = request.getHeader("X-Forwarded-For");
+    public static String getClientIp(ServerHttpRequest request) {
+        HttpHeaders headers = request.getHeaders();
+
+
+        String ipAddress = getHeaderValue(headers, "X-Forwarded-For");
         if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getHeader("X-Real-IP");
+            ipAddress = getHeaderValue(headers, "X-Real-IP");
         }
         if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getHeader("Proxy-Client-IP");
+            ipAddress = getHeaderValue(headers, "Proxy-Client-IP");
         }
         if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getHeader("WL-Proxy-Client-IP");
+            ipAddress = getHeaderValue(headers, "WL-Proxy-Client-IP");
         }
         if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getHeader("HTTP_CLIENT_IP");
+            ipAddress = getHeaderValue(headers, "HTTP_CLIENT_IP");
         }
         if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getHeader("HTTP_X_FORWARDED_FOR");
+            ipAddress = getHeaderValue(headers, "HTTP_X_FORWARDED_FOR");
         }
         if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-            ipAddress = request.getRemoteAddr();
+            ipAddress = request.getRemoteAddress().getHostName();
         }
         if (ipAddress.contains(",")) {
             // 阿里云SLB会将 LB的地址也传递过来，用逗号隔开。只需要取第一个即可
             ipAddress = ipAddress.split(",")[0].trim();
         }
         return ipAddress;
+    }
+
+    public static String getHeaderValue(HttpHeaders headers, String header) {
+        List<String> strings = headers.get(header);
+        if (CollectionUtils.isEmpty(strings)) {
+            return null;
+        }
+        return strings.getFirst();
     }
 
 }

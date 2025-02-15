@@ -6,19 +6,19 @@ import com.dobbinsoft.fw.support.utils.FieldUtils;
 import com.dobbinsoft.fw.support.utils.StringUtils;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.apache.poi.xssf.usermodel.*;
-import org.jetbrains.annotations.Nullable;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.swing.text.Style;
-import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,13 +26,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
-import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class ExcelUtils {
@@ -89,7 +87,6 @@ public class ExcelUtils {
         }
     }
 
-    @Nullable
     private static <T> List<T> importExcel(Class<T> clazz, Workbook workbook) {
         List<T> list = new ArrayList<T>();
         Field[] fields = getFields(clazz);
@@ -325,29 +322,6 @@ public class ExcelUtils {
 
 
     /**
-     * 导出表格
-     * @param response
-     * @param data
-     * @param clazz
-     * @param <T>
-     */
-    public static <T> void exportExcel(HttpServletResponse response, ExcelData<T> data, Class<T> clazz) {
-        log.info("导出解析开始，fileName:{}", data.getFileName());
-        //实例化XSSFWorkbook
-        try (XSSFWorkbook workbook = new XSSFWorkbook()){
-            //创建一个Excel表单，参数为sheet的名字
-            Sheet sheet = setSheet(clazz, workbook);
-            //设置单元格并赋值
-            setData(workbook, sheet, data.getData(), setTitle(workbook, sheet, clazz));
-            //设置浏览器下载
-            setBrowser(response, workbook, data.getFileName() + XLS_X);
-            log.info("导出解析成功!");
-        } catch (Exception e) {
-            log.error("导出解析失败!", e);
-        }
-    }
-
-    /**
      * 导出表格到流
      * @param os
      * @param data
@@ -366,6 +340,13 @@ public class ExcelUtils {
         } catch (Exception e) {
             log.error("导出解析失败!", e);
         }
+    }
+
+    public static <T> byte[] exportExcel(List<T> data, Class<T> clazz) {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        exportExcel(os, data, clazz);
+//        os.close(); ByteArrayOutputStream不需要关流
+        return os.toByteArray();
     }
 
     /**
@@ -421,33 +402,10 @@ public class ExcelUtils {
         }
     }
 
-    /**
-     * 导出大表格到流
-     * @param response
-     * @param adapter 大文件导出适配器
-     * @param <T>
-     */
-    public static <T> void exportBigExcel(HttpServletResponse response, ExcelBigExportAdapter<T> adapter, String fileName) {
-        Class<T> clazz = adapter.clazz();
-        Sheet sheet = null;
-        Field[] fields = FieldUtils.getAllFields(clazz);
-        try (SXSSFWorkbook workbook = new SXSSFWorkbook(200)) {
-            Page<T> dataBuffer = null;
-            do {
-                dataBuffer = adapter.getData(adapter.getPageNo().getAndIncrement());
-                if (!dataBuffer.hasPrevious()) {
-                    // 首页，创建sheet， 设置表头
-                    sheet = setSheet(clazz, workbook);
-                    setTitle(workbook, sheet, clazz);
-                }
-                setData(workbook, sheet, dataBuffer.getItems(), fields);
-            } while (dataBuffer.hasNext() && CollectionUtils.isNotEmpty(dataBuffer.getItems()));
-            //设置浏览器下载
-            setBrowser(response, workbook, fileName + XLS_X);
-            log.info("导出解析成功!");
-        } catch (Exception e) {
-            log.error("导出解析失败!", e);
-        }
+    public static <T> byte[] exportBigExcel(ExcelBigExportAdapter<T> adapter) {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        exportBigExcel(os, adapter);
+        return os.toByteArray();
     }
 
     /**
@@ -751,17 +709,17 @@ public class ExcelUtils {
         styleCache.put(cacheKey, style);
     }
 
-    private static void setBrowser(HttpServletResponse response, Workbook workbook, String fileName) {
-        try (OutputStream os = new BufferedOutputStream(response.getOutputStream())) {
-            //设置response的Header
-            response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8"));
-            response.setContentType("application/vnd.ms-excel;charset=gb2312");
-            //将excel写入到输出流中
-            workbook.write(os);
-            os.flush();
-            log.info("设置浏览器下载成功！");
-        } catch (Exception e) {
-            log.error("设置浏览器下载失败！", e);
-        }
-    }
+//    private static void setBrowser(HttpServletResponse response, Workbook workbook, String fileName) {
+//        try (OutputStream os = new BufferedOutputStream(response.getOutputStream())) {
+//            //设置response的Header
+//            response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
+//            response.setContentType("application/vnd.ms-excel;charset=gb2312");
+//            //将excel写入到输出流中
+//            workbook.write(os);
+//            os.flush();
+//            log.info("设置浏览器下载成功！");
+//        } catch (Exception e) {
+//            log.error("设置浏览器下载失败！", e);
+//        }
+//    }
 }

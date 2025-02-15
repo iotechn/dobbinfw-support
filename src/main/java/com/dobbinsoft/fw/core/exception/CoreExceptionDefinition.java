@@ -71,8 +71,8 @@ public class CoreExceptionDefinition {
     public static final ServiceExceptionDefinition LAUNCHER_ONLY_SSE_SUPPORT =
             new ServiceExceptionDefinition(10010, "SSE调用URL不正确");
 
-    public static final ServiceExceptionDefinition LAUNCHER_NOT_SUPPORT =
-            new ServiceExceptionDefinition(10011, "SSE尚未开启");
+    public static final ServiceExceptionDefinition LAUNCHER_SSE_ONLY_RETURN_FLUX =
+            new ServiceExceptionDefinition(10011, "SSE必须返回Flux对象");
 
     public static final ServiceExceptionDefinition LAUNCHER_ONLY_WS_SUPPORT =
             new ServiceExceptionDefinition(10012, "WS调用URL不正确");
