@@ -48,6 +48,9 @@ public class SessionStorageRedisImpl implements SessionStorage {
 
     @Override
     public <T extends IdentityOwner> T get(String prefix, String token, Class<T> clazz) {
+        if (StringUtils.isEmpty(token)) {
+            return null;
+        }
         String idStr = stringRedisTemplate.opsForValue().get(prefix + token);
         if (StringUtils.isEmpty(idStr)) {
             return null;
@@ -91,6 +94,9 @@ public class SessionStorageRedisImpl implements SessionStorage {
 
     @Override
     public void renew(String prefix, String token, Integer expire) {
+        if (StringUtils.isEmpty(token)) {
+            return;
+        }
         stringRedisTemplate.expire(prefix + token, expire, TimeUnit.SECONDS);
     }
 
