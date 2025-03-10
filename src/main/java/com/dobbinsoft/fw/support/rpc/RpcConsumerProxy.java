@@ -12,6 +12,7 @@ import com.dobbinsoft.fw.support.utils.JwtUtils;
 import com.dobbinsoft.fw.support.utils.TimeUtils;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -169,7 +170,11 @@ public class RpcConsumerProxy implements InitializingBean {
                                 } else if (finalReturnType == BigDecimal.class) {
                                     return Mono.just(new BigDecimal(jsonNode.get("data").asText()));
                                 } else {
-                                    return Mono.just(JacksonUtil.objectMapper.convertValue(jsonNode.get("data"), finalReturnType));
+                                    JsonNode data = jsonNode.get("data");
+                                    if (data == null || data instanceof NullNode) {
+                                        return Mono.empty();
+                                    }
+                                    return Mono.just(JacksonUtil.objectMapper.convertValue(data, finalReturnType));
                                 }
                             }
                             log.error("[RPC消费者代理] 服务异常：group: {}; method: {}, error message: {}", rpcService.group(), methodName, jsonNode.get("errmsg").asText());

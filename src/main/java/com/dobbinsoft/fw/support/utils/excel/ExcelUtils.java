@@ -18,10 +18,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -68,15 +65,6 @@ public class ExcelUtils {
 
     private static final String DATE_FORMAT = "yyyy-MM-dd";
 
-    public static <T> List<T> importExcel(MultipartFile file, Class<T> clazz) {
-        checkFile(file);
-        try (Workbook workbook = getWorkBook(file)) {
-            return importExcel(clazz, workbook);
-        } catch (IOException e) {
-            log.error("导入解析失败!", e);
-            return Collections.emptyList();
-        }
-    }
 
     public static <T> List<T> importExcel(InputStream is, String fileName, Class<T> clazz) {
         try (Workbook workbook = getWorkBook(is, fileName)) {
@@ -265,28 +253,6 @@ public class ExcelUtils {
         return fields;
     }
 
-    private static Workbook getWorkBook(MultipartFile file) {
-        // 获得文件名
-        String fileName = file.getOriginalFilename();
-        // 创建Workbook工作薄对象，表示整个excel
-        Workbook workbook = null;
-        // 获取excel文件的io流
-        try (InputStream is = file.getInputStream()){
-            // 根据文件后缀名不同(xls和xlsx)获得不同的Workbook实现类对象
-            assert fileName != null;
-            if (fileName.endsWith(XLS)) {
-                // 2003
-                workbook = new HSSFWorkbook(is);
-            } else if (fileName.endsWith(XLS_X)) {
-                // 2007
-                workbook = new XSSFWorkbook(is);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("excel 转换 HSSFWorkbook 异常！", e);
-        }
-        return workbook;
-    }
-
     private static Workbook getWorkBook(InputStream is, String fileName) {
         // 创建Workbook工作薄对象，表示整个excel
         Workbook workbook = null;
@@ -304,20 +270,6 @@ public class ExcelUtils {
             throw new RuntimeException("excel 转换 HSSFWorkbook 异常！", e);
         }
         return workbook;
-    }
-
-    private static void checkFile(MultipartFile file) {
-        // 判断文件是否存在
-        if (null == file) {
-            throw new RuntimeException("文件不存在!!");
-        }
-        // 获得文件名
-        String fileName = file.getOriginalFilename();
-        // 判断文件是否是excel文件
-        assert fileName != null;
-        if (!fileName.endsWith(XLS) && !fileName.endsWith(XLS_X)) {
-            throw new RuntimeException(fileName + "不是excel文件");
-        }
     }
 
 
