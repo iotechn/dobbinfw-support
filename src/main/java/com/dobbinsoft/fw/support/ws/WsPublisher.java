@@ -71,10 +71,12 @@ public class WsPublisher {
     }
 
     Mono<Void> send(WsShareDTO wsShareDTO) {
-        WebSocketSession webSocketSession = clients.get(wsShareDTO.getIdentityOwnerKey());
-        if (webSocketSession != null) {
-            WebSocketMessage webSocketMessage = webSocketSession.textMessage(wsShareDTO.getEventJson());
-            Mono<Void> mono = webSocketSession.send(Flux.just(webSocketMessage));
+        WebSocketSession session = clients.get(wsShareDTO.getIdentityOwnerKey());
+        if (session != null) {
+//            WebSocketMessage webSocketMessage = session.textMessage(wsShareDTO.getEventJson());
+            Flux<WebSocketMessage> output = session.receive()
+                    .map(value -> session.textMessage(wsShareDTO.getEventJson()));
+            Mono<Void> mono = session.send(output);
             log.info("[WS] sendTo: {} with message: {}", wsShareDTO.getIdentityOwnerKey(), wsShareDTO.getEventJson());
             return mono;
         } else {
