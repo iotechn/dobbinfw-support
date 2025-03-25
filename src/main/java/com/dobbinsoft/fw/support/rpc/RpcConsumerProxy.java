@@ -16,11 +16,12 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
+import okhttp3.*;
+import okio.BufferedSource;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.lang.reflect.*;
@@ -122,47 +123,91 @@ public class RpcConsumerProxy implements InitializingBean {
                     rsa256 = JwtUtils.createRSA256(header, Collections.emptyMap(), JWT_EXPIRE_SECONDS, fwRpcConsumerProperties.getPrivateKey());
                     jwtCache.put(fwRpcConsumerProperties.getSystemId(), rsa256);
                 }
-                String json = okHttpClient.newCall(
-                                new Request
-                                        .Builder()
-                                        .url(rpcProvider.getUrl())
-                                        .header(Const.RPC_HEADER, rsa256)
-                                        .header(Const.RPC_CONTEXT_JSON, JacksonUtil.toJSONString(context))
-                                        .header(Const.RPC_SYSTEM_ID, fwRpcConsumerProperties.getSystemId())
-                                        .post(builder.build())
-                                        .build())
-                        .execute()
-                        .body()
-                        .string();
                 Class<?> returnType = method.getReturnType();
-                Type genericReturnType = method.getGenericReturnType();
-                JsonNode jsonNode = JacksonUtil.parseObject(json);
-                assert jsonNode != null;
-                if (jsonNode.get("errno").asInt() == 200) {
-                    if (genericReturnType instanceof ParameterizedType) {
-                        TypeFactory typeFactory = JacksonUtil.objectMapper.getTypeFactory();
-                        JavaType javaType = typeFactory.constructType(genericReturnType);
-                        // 使用JavaType进行反序列化
-                        return JacksonUtil.objectMapper.convertValue(jsonNode.get("data"), javaType);
-                    } else if (Const.IGNORE_PARAM_LIST.contains(returnType)) {
-                        Constructor<?> constructor = returnType.getConstructor(String.class);
-                        return constructor.newInstance(jsonNode.get("data").asText());
-                    } else if (returnType == LocalDateTime.class) {
-                        return TimeUtils.stringToLocalDateTime(jsonNode.get("data").asText());
-                    } else if (returnType == LocalDate.class) {
-                        return TimeUtils.stringToLocalDate(jsonNode.get("data").asText());
-                    } else if (returnType == LocalTime.class) {
-                        return TimeUtils.stringToLocalTime(jsonNode.get("data").asText());
-                    } else if (returnType == Date.class) {
-                        return TimeUtils.stringToDate(jsonNode.get("data").asText());
-                    } else if (returnType == BigDecimal.class) {
-                        return new BigDecimal(jsonNode.get("data").asText());
-                    } else {
-                        return JacksonUtil.objectMapper.convertValue(jsonNode.get("data"), returnType);
+                if (returnType == Flux.class) {
+                    // 流式调用
+                    // 执行请求并获取响应
+                    String finalRsa25 = rsa256;
+//                    Type genericReturnType = method.getGenericReturnType();
+                    return Flux.create((sink) -> {
+                        okHttpClient.newCall(
+                                        new Request
+                                                .Builder()
+                                                .url(rpcProvider.getUrl() + "/" + rpcService.group() + "/" + method)
+                                                .header(Const.RPC_HEADER, finalRsa25)
+                                                .header(Const.RPC_CONTEXT_JSON, JacksonUtil.toJSONString(context))
+                                                .header(Const.RPC_SYSTEM_ID, fwRpcConsumerProperties.getSystemId())
+                                                .post(builder.build())
+                                                .build())
+                                .enqueue(new Callback() {
+                                    @Override
+                                    public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                                        sink.error(e);
+                                    }
+                                    @Override
+                                    public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                                        // 获取 SSE 流数据
+                                        try {
+                                            assert response.body() != null;
+                                            BufferedSource source = response.body().source();
+                                            while (!source.exhausted()) {
+                                                // 每次读取一行
+                                                String line = source.readUtf8Line();
+                                                if (line != null) {
+                                                    // 每当读取到一行数据时，发出一个事件
+                                                    sink.next(line);
+                                                }
+                                            }
+                                        } catch (Exception e) {
+                                            sink.error(e);
+                                        } finally {
+                                            sink.complete();
+                                        }
+                                    }
+                                });
+                    });
+                } else {
+                    String json = okHttpClient.newCall(
+                                    new Request
+                                            .Builder()
+                                            .url(rpcProvider.getUrl())
+                                            .header(Const.RPC_HEADER, rsa256)
+                                            .header(Const.RPC_CONTEXT_JSON, JacksonUtil.toJSONString(context))
+                                            .header(Const.RPC_SYSTEM_ID, fwRpcConsumerProperties.getSystemId())
+                                            .post(builder.build())
+                                            .build())
+                            .execute()
+                            .body()
+                            .string();
+                    Type genericReturnType = method.getGenericReturnType();
+                    JsonNode jsonNode = JacksonUtil.parseObject(json);
+                    assert jsonNode != null;
+                    if (jsonNode.get("errno").asInt() == 200) {
+                        if (genericReturnType instanceof ParameterizedType) {
+                            TypeFactory typeFactory = JacksonUtil.objectMapper.getTypeFactory();
+                            JavaType javaType = typeFactory.constructType(genericReturnType);
+                            // 使用JavaType进行反序列化
+                            return JacksonUtil.objectMapper.convertValue(jsonNode.get("data"), javaType);
+                        } else if (Const.IGNORE_PARAM_LIST.contains(returnType)) {
+                            Constructor<?> constructor = returnType.getConstructor(String.class);
+                            return constructor.newInstance(jsonNode.get("data").asText());
+                        } else if (returnType == LocalDateTime.class) {
+                            return TimeUtils.stringToLocalDateTime(jsonNode.get("data").asText());
+                        } else if (returnType == LocalDate.class) {
+                            return TimeUtils.stringToLocalDate(jsonNode.get("data").asText());
+                        } else if (returnType == LocalTime.class) {
+                            return TimeUtils.stringToLocalTime(jsonNode.get("data").asText());
+                        } else if (returnType == Date.class) {
+                            return TimeUtils.stringToDate(jsonNode.get("data").asText());
+                        } else if (returnType == BigDecimal.class) {
+                            return new BigDecimal(jsonNode.get("data").asText());
+                        } else {
+                            return JacksonUtil.objectMapper.convertValue(jsonNode.get("data"), returnType);
+                        }
                     }
+                    log.error("[RPC消费者代理] 服务异常：group: {}; method: {}, error message: {}", rpcService.group(), methodName, jsonNode.get("errmsg").asText());
+                    throw new ServiceException(jsonNode.get("errmsg").asText(), jsonNode.get("errno").asInt());
                 }
-                log.error("[RPC消费者代理] 服务异常：group: {}; method: {}, error message: {}", rpcService.group(), methodName, jsonNode.get("errmsg").asText());
-                throw new ServiceException(jsonNode.get("errmsg").asText(), jsonNode.get("errno").asInt());
             } catch (IOException e) {
                 log.error("[RPC消费者代理] 上游网络不通, msg: {}",e.getMessage());
                 throw new ServiceException("RPC网络异常 systemId:%s".formatted(rpcService.systemId()));
