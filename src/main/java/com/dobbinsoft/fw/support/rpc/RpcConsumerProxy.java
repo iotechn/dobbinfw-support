@@ -133,7 +133,7 @@ public class RpcConsumerProxy implements InitializingBean {
                         okHttpClient.newCall(
                                         new Request
                                                 .Builder()
-                                                .url(rpcProvider.getUrl() + "/" + rpcService.group() + "/" + method)
+                                                .url(rpcProvider.getUrl() + "/" + rpcService.group() + "/" + methodName)
                                                 .header(Const.RPC_HEADER, finalRsa25)
                                                 .header(Const.RPC_CONTEXT_JSON, JacksonUtil.toJSONString(context))
                                                 .header(Const.RPC_SYSTEM_ID, fwRpcConsumerProperties.getSystemId())
@@ -170,7 +170,7 @@ public class RpcConsumerProxy implements InitializingBean {
                     String json = okHttpClient.newCall(
                                     new Request
                                             .Builder()
-                                            .url(rpcProvider.getUrl())
+                                            .url(rpcProvider.getUrl() + "/" + rpcService.group() + "/" + methodName)
                                             .header(Const.RPC_HEADER, rsa256)
                                             .header(Const.RPC_CONTEXT_JSON, JacksonUtil.toJSONString(context))
                                             .header(Const.RPC_SYSTEM_ID, fwRpcConsumerProperties.getSystemId())
