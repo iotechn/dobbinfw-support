@@ -129,43 +129,53 @@ public class RpcConsumerProxy implements InitializingBean {
                     // 执行请求并获取响应
                     String finalRsa25 = rsa256;
 //                    Type genericReturnType = method.getGenericReturnType();
-                    return Flux.create((sink) -> {
-                        okHttpClient.newCall(
-                                        new Request
-                                                .Builder()
-                                                .url(rpcProvider.getUrl() + "/" + rpcService.group() + "/" + methodName)
-                                                .header(Const.RPC_HEADER, finalRsa25)
-                                                .header(Const.RPC_CONTEXT_JSON, JacksonUtil.toJSONString(context))
-                                                .header(Const.RPC_SYSTEM_ID, fwRpcConsumerProperties.getSystemId())
-                                                .post(builder.build())
-                                                .build())
-                                .enqueue(new Callback() {
-                                    @Override
-                                    public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                                        sink.error(e);
-                                    }
-                                    @Override
-                                    public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                                        // 获取 SSE 流数据
-                                        try {
-                                            assert response.body() != null;
-                                            BufferedSource source = response.body().source();
-                                            while (!source.exhausted()) {
-                                                // 每次读取一行
-                                                String line = source.readUtf8Line();
-                                                if (line != null) {
-                                                    // 每当读取到一行数据时，发出一个事件
-                                                    sink.next(line);
+                    return Flux.create(sink -> {
+                        // 构建请求
+                        Request request = new Request.Builder()
+                                .url(rpcProvider.getUrl() + "-sse" + "/" + rpcService.group() + "/" + methodName)
+                                .header(Const.RPC_HEADER, finalRsa25)
+                                .header(Const.RPC_CONTEXT_JSON, JacksonUtil.toJSONString(context))
+                                .header(Const.RPC_SYSTEM_ID, fwRpcConsumerProperties.getSystemId())
+                                .post(builder.build())
+                                .build();
+
+                        // 异步调用 API
+                        okHttpClient.newCall(request).enqueue(new Callback() {
+                            @Override
+                            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                                // 如果请求失败，传递错误
+                                sink.error(e);
+                            }
+
+                            @Override
+                            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                                if (response.isSuccessful() && response.body() != null) {
+                                    BufferedSource source = response.body().source();
+                                    try {
+                                        // 逐行读取数据并发出
+                                        while (!source.exhausted()) {
+                                            String line = source.readUtf8Line();
+                                            if (line != null) {
+                                                if (line.startsWith("data:")) {
+                                                    String eventData = line.substring(5).trim(); // 获取事件数据
+                                                    // 每次读取到一行数据时，发出事件
+                                                    sink.next(eventData);
                                                 }
                                             }
-                                        } catch (Exception e) {
-                                            sink.error(e);
-                                        } finally {
-                                            sink.complete();
                                         }
+                                    } catch (Exception e) {
+                                        sink.error(e); // 错误处理
+                                    } finally {
+                                        sink.complete(); // 流结束，调用 complete
                                     }
-                                });
+                                } else {
+                                    // 如果响应不成功，发出错误
+                                    sink.error(new IOException("Failed to connect, response code: " + response.code()));
+                                }
+                            }
+                        });
                     });
+
                 } else {
                     String json = okHttpClient.newCall(
                                     new Request
