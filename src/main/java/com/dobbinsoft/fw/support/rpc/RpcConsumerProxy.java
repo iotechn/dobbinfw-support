@@ -46,8 +46,8 @@ public class RpcConsumerProxy implements InitializingBean {
     private final OkHttpClient okHttpClient = new OkHttpClient
             .Builder()
             .connectTimeout(Duration.ofSeconds(15))
-            .callTimeout(Duration.ofSeconds(15))
-            .readTimeout(Duration.ofSeconds(15))
+            .callTimeout(Duration.ofSeconds(60 * 3))
+            .readTimeout(Duration.ofSeconds(60 * 3))
             .build();
 
     private final Map<String, FwRpcConsumerProperties.RpcProvider> providerMap = new HashMap<>();
