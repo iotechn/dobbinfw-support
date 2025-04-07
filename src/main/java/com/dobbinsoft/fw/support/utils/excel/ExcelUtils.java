@@ -4,6 +4,7 @@ import com.dobbinsoft.fw.support.model.Page;
 import com.dobbinsoft.fw.support.utils.CollectionUtils;
 import com.dobbinsoft.fw.support.utils.FieldUtils;
 import com.dobbinsoft.fw.support.utils.StringUtils;
+import com.dobbinsoft.fw.support.utils.TimeUtils;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,11 +14,13 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.apache.poi.xssf.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.swing.text.Style;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,12 +30,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class ExcelUtils {
@@ -66,9 +70,10 @@ public class ExcelUtils {
      */
     private final static String E = "e";
 
-    private static final String TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    private static final String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     private static final String DATE_FORMAT = "yyyy-MM-dd";
+    private static final String TIME_FORMAT = "HH:mm:ss";
 
     public static <T> List<T> importExcel(MultipartFile file, Class<T> clazz) {
         checkFile(file);
@@ -639,20 +644,25 @@ public class ExcelUtils {
                                 cell.setCellValue((Double) value);
                                 setDataCellStyle(workbook, excelColumn, cell);
                             } else if (field.getType().equals(Date.class)) {
+                                String format = StringUtils.firstNonBlank(excelColumn.format(), DATETIME_FORMAT);
                                 Cell cell = row.createCell(excelColumn.index());
                                 cell.setCellValue((Date) value);
-                                setDataCellStyle(workbook, cell,
-                                        StringUtils.isNoneBlank(excelColumn.format()) ? excelColumn.format() : TIME_FORMAT);
+                                setDataCellStyle(workbook, cell, format);
                             } else if (field.getType().equals(LocalDate.class)) {
+                                String format = StringUtils.firstNonBlank(excelColumn.format(), DATE_FORMAT);
                                 Cell cell = row.createCell(excelColumn.index());
-                                cell.setCellValue((LocalDate) value);
-                                setDataCellStyle(workbook, cell,
-                                        StringUtils.isNoneBlank(excelColumn.format()) ? excelColumn.format() : DATE_FORMAT);
+                                cell.setCellValue(TimeUtils.localDateToString((LocalDate) value, format));
+                                setDataCellStyle(workbook, cell, format);
                             } else if (field.getType().equals(LocalDateTime.class)) {
+                                String format = StringUtils.firstNonBlank(excelColumn.format(), DATETIME_FORMAT);
                                 Cell cell = row.createCell(excelColumn.index());
-                                cell.setCellValue((LocalDateTime) value);
-                                setDataCellStyle(workbook, cell,
-                                        StringUtils.isNoneBlank(excelColumn.format()) ? excelColumn.format() : TIME_FORMAT);
+                                cell.setCellValue(TimeUtils.localDateTimeToString((LocalDateTime) value, format));
+                                setDataCellStyle(workbook, cell, format);
+                            } else if (field.getType().equals(LocalTime.class)) {
+                                String format = StringUtils.firstNonBlank(excelColumn.format(), TIME_FORMAT);
+                                Cell cell = row.createCell(excelColumn.index());
+                                cell.setCellValue(TimeUtils.localTimeToString((LocalTime) value, format));
+                                setDataCellStyle(workbook, cell, format);
                             } else if (field.getType().equals(Integer.class)) {
                                 Cell cell = row.createCell(excelColumn.index());
                                 cell.setCellValue((Integer) value);
@@ -754,7 +764,7 @@ public class ExcelUtils {
     private static void setBrowser(HttpServletResponse response, Workbook workbook, String fileName) {
         try (OutputStream os = new BufferedOutputStream(response.getOutputStream())) {
             //设置response的Header
-            response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8"));
+            response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
             response.setContentType("application/vnd.ms-excel;charset=gb2312");
             //将excel写入到输出流中
             workbook.write(os);
