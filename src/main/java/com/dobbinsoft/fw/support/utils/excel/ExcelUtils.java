@@ -1,10 +1,7 @@
 package com.dobbinsoft.fw.support.utils.excel;
 
 import com.dobbinsoft.fw.support.model.Page;
-import com.dobbinsoft.fw.support.utils.CollectionUtils;
-import com.dobbinsoft.fw.support.utils.FieldUtils;
-import com.dobbinsoft.fw.support.utils.StringUtils;
-import com.dobbinsoft.fw.support.utils.TimeUtils;
+import com.dobbinsoft.fw.support.utils.*;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import jakarta.servlet.http.HttpServletResponse;
@@ -137,7 +134,7 @@ public class ExcelUtils {
                         setValue = true;
                     }
                     Object value = getCellValue(cell, field);
-                    createBean(field, obj, value);
+                    createBean(field, obj, value, excelColumn);
                 }
                 if (setValue) {
                     list.add((T) obj);
@@ -147,10 +144,10 @@ public class ExcelUtils {
         return list;
     }
 
-    private static <T> void createBean(Field field, T newInstance, Object value) {
+    private static <T> void createBean(Field field, T newInstance, Object value, ExcelColumn excelColumn) {
         field.setAccessible(true);
         try {
-            if (value == null) {
+            if (ObjectUtils.isEmpty(value)) {
                 field.set(newInstance, null);
             } else if (Long.class.equals(field.getType())) {
                 field.set(newInstance, Long.valueOf(String.valueOf(value).trim()));
@@ -167,9 +164,19 @@ public class ExcelUtils {
             } else if (Double.class.equals(field.getType())) {
                 field.set(newInstance, Double.valueOf(String.valueOf(value).trim()));
             } else if (LocalDate.class.equals(field.getType())) {
-                field.set(newInstance, ((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+                if (value instanceof String) {
+                    String format = StringUtils.firstNonBlank(excelColumn.format(), DATE_FORMAT);
+                    field.set(newInstance, TimeUtils.stringToLocalDate((String) value, format));
+                } else {
+                    field.set(newInstance, ((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+                }
             } else if (LocalDateTime.class.equals(field.getType())) {
-                field.set(newInstance, ((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+                if (value instanceof String) {
+                    String format = StringUtils.firstNonBlank(excelColumn.format(), DATETIME_FORMAT);
+                    field.set(newInstance, TimeUtils.stringToLocalDateTime((String) value, format));
+                } else {
+                    field.set(newInstance, ((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+                }
             } else if (BigDecimal.class.equals(field.getType())){
                 field.set(newInstance, new BigDecimal(String.valueOf(value).trim()));
             } else {
