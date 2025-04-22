@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.1</version>
+        <version>3.4.4</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.dobbinsoft</groupId>
     <artifactId>fw-support</artifactId>
-    <version>2.0.9.6</version>
+    <version>2.1.0.0</version>
     <name>fw-support</name>
     <description>支持包</description>
 
@@ -49,13 +49,13 @@
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
-            <version>5.3.0</version>
+            <version>5.4.1</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
-            <version>5.3.0</version>
+            <version>5.4.1</version>
         </dependency>
 
         <!-- 本地缓存 -->
@@ -67,7 +67,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.12.681</version>
+            <version>1.12.782</version>
         </dependency>
 
         <!-- XML Jackson -->
@@ -117,20 +117,20 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
-            <version>3.5.9</version>
+            <version>3.5.11</version>
         </dependency>
 
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-annotation</artifactId>
-            <version>3.5.9</version>
+            <version>3.5.11</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-jsqlparser</artifactId>
-            <version>3.5.9</version> <!-- 3.5.9 之后对模块进行了拆分 -->
+            <version>3.5.11</version> <!-- 3.5.9 之后对模块进行了拆分 -->
         </dependency>
 
         <!-- mysql -->

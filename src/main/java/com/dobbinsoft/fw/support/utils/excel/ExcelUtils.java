@@ -281,6 +281,7 @@ public class ExcelUtils {
     }
 
     private static Workbook getWorkBook(MultipartFile file) {
+        assert file != null;
         // 获得文件名
         String fileName = file.getOriginalFilename();
         // 创建Workbook工作薄对象，表示整个excel
@@ -288,7 +289,6 @@ public class ExcelUtils {
         // 获取excel文件的io流
         try (InputStream is = file.getInputStream()){
             // 根据文件后缀名不同(xls和xlsx)获得不同的Workbook实现类对象
-            assert fileName != null;
             if (fileName.endsWith(XLS)) {
                 // 2003
                 workbook = new HSSFWorkbook(is);
@@ -335,7 +335,6 @@ public class ExcelUtils {
         }
     }
 
-
     /**
      * 导出表格
      * @param response
@@ -344,13 +343,25 @@ public class ExcelUtils {
      * @param <T>
      */
     public static <T> void exportExcel(HttpServletResponse response, ExcelData<T> data, Class<T> clazz) {
+        exportExcel(response, data, clazz, null);
+    }
+
+    /**
+     * 导出表格
+     * @param response
+     * @param data
+     * @param clazz
+     * @param decorators
+     * @param <T>
+     */
+    public static <T> void exportExcel(HttpServletResponse response, ExcelData<T> data, Class<T> clazz, List<ExcelColumDecorator> decorators) {
         log.info("导出解析开始，fileName:{}", data.getFileName());
         //实例化XSSFWorkbook
         try (XSSFWorkbook workbook = new XSSFWorkbook()){
             //创建一个Excel表单，参数为sheet的名字
             Sheet sheet = setSheet(clazz, workbook);
             //设置单元格并赋值
-            setData(workbook, sheet, data.getData(), setTitle(workbook, sheet, clazz));
+            setData(workbook, sheet, data.getData(), setTitle(workbook, sheet, clazz, decorators));
             //设置浏览器下载
             setBrowser(response, workbook, data.getFileName() + XLS_X);
             log.info("导出解析成功!");
@@ -358,6 +369,7 @@ public class ExcelUtils {
             log.error("导出解析失败!", e);
         }
     }
+
 
     /**
      * 导出表格到流
@@ -367,12 +379,24 @@ public class ExcelUtils {
      * @param <T>
      */
     public static <T> void exportExcel(OutputStream os, List<T> data, Class<T> clazz) {
+        exportExcel(os, data, clazz, null);
+    }
+
+    /**
+     * 导出表格到流
+     * @param os
+     * @param data
+     * @param clazz
+     * @param decorators 装饰（用于不能用注解定义的装饰）
+     * @param <T>
+     */
+    public static <T> void exportExcel(OutputStream os, List<T> data, Class<T> clazz, List<ExcelColumDecorator> decorators) {
         //实例化XSSFWorkbook
         try (XSSFWorkbook workbook = new XSSFWorkbook()){
             //创建一个Excel表单，参数为sheet的名字
             Sheet sheet = setSheet(clazz, workbook);
             //设置单元格并赋值
-            setData(workbook, sheet, data, setTitle(workbook, sheet, clazz));
+            setData(workbook, sheet, data, setTitle(workbook, sheet, clazz, decorators));
             workbook.write(os);
             log.info("导出解析成功!");
         } catch (Exception e) {
@@ -394,7 +418,7 @@ public class ExcelUtils {
                 List<?> data = dataList.get(i);
                 Sheet sheet = setSheet(clazz, workbook);
                 //设置单元格并赋值
-                setData(workbook, sheet, data, setTitle(workbook, sheet, clazz));
+                setData(workbook, sheet, data, setTitle(workbook, sheet, clazz, null));
             }
 
 
@@ -422,7 +446,7 @@ public class ExcelUtils {
                 if (!dataBuffer.hasPrevious()) {
                     // 首页，创建sheet， 设置表头
                     sheet = setSheet(clazz, workbook);
-                    setTitle(workbook, sheet, clazz);
+                    setTitle(workbook, sheet, clazz, null);
                 }
                 setData(workbook, sheet, dataBuffer.getItems(), fields);
             } while (dataBuffer.hasNext() || CollectionUtils.isNotEmpty(dataBuffer.getItems()));
@@ -450,7 +474,7 @@ public class ExcelUtils {
                 if (!dataBuffer.hasPrevious()) {
                     // 首页，创建sheet， 设置表头
                     sheet = setSheet(clazz, workbook);
-                    setTitle(workbook, sheet, clazz);
+                    setTitle(workbook, sheet, clazz, null);
                 }
                 setData(workbook, sheet, dataBuffer.getItems(), fields);
             } while (dataBuffer.hasNext() && CollectionUtils.isNotEmpty(dataBuffer.getItems()));
@@ -485,18 +509,20 @@ public class ExcelUtils {
 
     /**
      * 设置表头
+     *
      * @param workbook
      * @param sheet
      * @param clazz
+     * @param decorators
      * @return
      */
-    private static Field[] setTitle(Workbook workbook, Sheet sheet, Class clazz) {
+    private static Field[] setTitle(Workbook workbook, Sheet sheet, Class clazz, List<ExcelColumDecorator> decorators) {
         Field[] fields = FieldUtils.getAllFields(clazz);
         try {
             CellStyle style = createXssfCellStyle(workbook);
             setHeaderTemplate(sheet, clazz, style);
             setColumnTemplate(sheet, fields, style);
-            setColumnTitle(sheet, fields, style);
+            setColumnTitle(sheet, fields, style, decorators);
         } catch (Exception e) {
             log.info("导出时设置表头失败！", e);
         }
@@ -558,7 +584,7 @@ public class ExcelUtils {
         }
     }
 
-    private static void setColumnTitle(Sheet sheet, Field[] fields, CellStyle style) {
+    private static void setColumnTitle(Sheet sheet, Field[] fields, CellStyle style, List<ExcelColumDecorator> decorators) {
         int nextRow = sheet.getLastRowNum() + 1;
         for (Field field : fields) {
             field.setAccessible(true);
@@ -600,6 +626,12 @@ public class ExcelUtils {
                 if (enums.length > 0) {
                     // 如果enums存在，则需要限定这一列，只能输入/选择枚举中的值
                     setValidation(sheet, enums, nextRow + 1, nextRow + 100, excelColumn.index(), excelColumn.index());
+                } else if (CollectionUtils.isNotEmpty(decorators)) {
+                    for (ExcelColumDecorator decorator : decorators) {
+                        if (excelColumn.index() == decorator.getIndex() && CollectionUtils.isNotEmpty(decorator.getEnums())) {
+                            setValidation(sheet, decorator.getEnums().toArray(new String[]{}), nextRow + 1, nextRow + 100, excelColumn.index(), excelColumn.index());
+                        }
+                    }
                 }
             }
         }
