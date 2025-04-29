@@ -772,7 +772,7 @@ public class ExcelUtils {
 
 
     private static void setDataCellStyle(Workbook workbook, Cell cell, String format) {
-        CellStyle ifPresent = styleCache.getIfPresent(workbook.toString() + "___" + format);
+        CellStyle ifPresent = styleCache.getIfPresent(System.identityHashCode(workbook) + "___" + format);
         if (ifPresent != null) {
             cell.setCellStyle(ifPresent);
             return;
@@ -785,7 +785,7 @@ public class ExcelUtils {
     }
 
     private static void setDataCellStyle(Workbook workbook, ExcelColumn excelColumn, Cell cell) {
-        String cacheKey = workbook.toString() + "___" + workbook.getActiveSheetIndex() + "___" + excelColumn.format();
+        String cacheKey = System.identityHashCode(workbook) + "___" + excelColumn.format();
         CellStyle ifPresent = styleCache.getIfPresent(cacheKey);
         if (ifPresent != null) {
             cell.setCellStyle(ifPresent);
