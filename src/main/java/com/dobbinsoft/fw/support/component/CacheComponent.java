@@ -317,6 +317,10 @@ public class CacheComponent {
         return (Map)entries;
     }
 
+    public Long getHashSize(String key) {
+        String k = getKey(key);
+        return stringRedisTemplate.opsForHash().size(k);
+    }
 
     /**
      * 向有序集合中添加元素
