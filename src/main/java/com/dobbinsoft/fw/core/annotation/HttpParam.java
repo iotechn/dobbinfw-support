@@ -1,5 +1,6 @@
 package com.dobbinsoft.fw.core.annotation;
 
+import com.dobbinsoft.fw.core.annotation.param.values.ValueDefaultProvider;
 import com.dobbinsoft.fw.core.enums.BaseEnums;
 import com.dobbinsoft.fw.core.enums.EmptyEnums;
 
@@ -47,6 +48,8 @@ public @interface HttpParam {
     // 参数默认值
     // Default value of the parameter
     String valueDef() default "";
+
+    Class<? extends ValueDefaultProvider> valueDefaultProvider() default ValueDefaultProvider.class;
 
     // 反序列化为数组时，其中的泛型（为了兼容Java的泛型擦出）
     // The generic type when deserializing into an array (for compatibility with Java's generic erasure).

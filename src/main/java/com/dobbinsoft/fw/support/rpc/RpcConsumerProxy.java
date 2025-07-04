@@ -21,12 +21,11 @@ import okio.BufferedSource;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import reactor.core.publisher.Flux;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.lang.reflect.*;
 import java.math.BigDecimal;
-import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -124,58 +123,51 @@ public class RpcConsumerProxy implements InitializingBean {
                     jwtCache.put(fwRpcConsumerProperties.getSystemId(), rsa256);
                 }
                 Class<?> returnType = method.getReturnType();
-                if (returnType == Flux.class) {
+                if (returnType == SseEmitter.class) {
                     // 流式调用
-                    // 执行请求并获取响应
-                    String finalRsa25 = rsa256;
-//                    Type genericReturnType = method.getGenericReturnType();
-                    return Flux.create(sink -> {
-                        // 构建请求
-                        Request request = new Request.Builder()
-                                .url(rpcProvider.getUrl() + "-sse" + "/" + rpcService.group() + "/" + methodName)
-                                .header(Const.RPC_HEADER, finalRsa25)
-                                .header(Const.RPC_CONTEXT_JSON, JacksonUtil.toJSONString(context))
-                                .header(Const.RPC_SYSTEM_ID, fwRpcConsumerProperties.getSystemId())
-                                .post(builder.build())
-                                .build();
+                    Request request = new Request.Builder()
+                            .url(rpcProvider.getUrl() + "-sse" + "/" + rpcService.group() + "/" + methodName)
+                            .header(Const.RPC_HEADER, rsa256)
+                            .header(Const.RPC_CONTEXT_JSON, JacksonUtil.toJSONString(context))
+                            .header(Const.RPC_SYSTEM_ID, fwRpcConsumerProperties.getSystemId())
+                            .post(builder.build())
+                            .build();
 
-                        // 异步调用 API
-                        okHttpClient.newCall(request).enqueue(new Callback() {
-                            @Override
-                            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                                // 如果请求失败，传递错误
-                                sink.error(e);
-                            }
+                    SseEmitter sseEmitter = new SseEmitter();
+                    // 异步调用 API
+                    okHttpClient.newCall(request).enqueue(new Callback() {
+                        @Override
+                        public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                            // 如果请求失败，传递错误
+                            log.error("[SSE RPC] Error", e);
+                        }
 
-                            @Override
-                            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                                if (response.isSuccessful() && response.body() != null) {
-                                    BufferedSource source = response.body().source();
-                                    try {
-                                        // 逐行读取数据并发出
-                                        while (!source.exhausted()) {
-                                            String line = source.readUtf8Line();
-                                            if (line != null) {
-                                                if (line.startsWith("data:")) {
-                                                    String eventData = line.substring(5).trim(); // 获取事件数据
-                                                    // 每次读取到一行数据时，发出事件
-                                                    sink.next(eventData);
-                                                }
+                        @Override
+                        public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                            if (response.isSuccessful() && response.body() != null) {
+                                BufferedSource source = response.body().source();
+                                try {
+                                    // 逐行读取数据并发出
+                                    while (!source.exhausted()) {
+                                        String line = source.readUtf8Line();
+                                        if (line != null) {
+                                            if (line.startsWith("data:")) {
+                                                String eventData = line.substring(5).trim(); // 获取事件数据
+                                                // 每次读取到一行数据时，发出事件
+                                                sseEmitter.send(eventData);
                                             }
                                         }
-                                    } catch (Exception e) {
-                                        sink.error(e); // 错误处理
-                                    } finally {
-                                        sink.complete(); // 流结束，调用 complete
                                     }
-                                } else {
-                                    // 如果响应不成功，发出错误
-                                    sink.error(new IOException("Failed to connect, response code: " + response.code()));
+                                } catch (Exception e) {
+                                    log.error("[SSE RPC] Error", e);
                                 }
+                            } else {
+                                // 如果响应不成功，发出错误
+                                throw new IOException("Failed to connect, response code: " + response.code());
                             }
-                        });
+                        }
                     });
-
+                    return sseEmitter;
                 } else {
                     String json = okHttpClient.newCall(
                                     new Request

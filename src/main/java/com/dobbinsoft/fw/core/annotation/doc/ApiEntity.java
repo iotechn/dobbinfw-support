@@ -16,6 +16,16 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ApiEntity {
 
+    /**
+     * 实体名，默认为类名 （不支持带范型的类）
+     * @return
+     */
+    String name() default "";
+
+    /**
+     * 描述
+     * @return
+     */
     String description();
 
 }

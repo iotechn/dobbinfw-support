@@ -1,13 +1,17 @@
 package com.dobbinsoft.fw.core.model;
 
+import com.dobbinsoft.fw.core.annotation.doc.ApiEntity;
 import com.dobbinsoft.fw.core.annotation.doc.ApiField;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Description: 统一对外回复封装
  * @param <T> 数据类型
  */
-@Data
+@Getter
+@Setter
+//@ApiEntity(name = "GatewayResponse", description = "网关统一响应")
 public class GatewayResponse<T> {
     @ApiField(description = "200代表成功，非200代表失败")
     private int errno;

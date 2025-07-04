@@ -294,11 +294,16 @@ public class CacheComponent {
 
     public void putHashAll(String key, Map<String, String> map, Integer expireSec) {
         String k = getKey(key);
+        putHashAll(key, map);
+        stringRedisTemplate.expire(k, expireSec, TimeUnit.SECONDS);
+    }
+
+    public void putHashAll(String key, Map<String, String> map) {
+        String k = getKey(key);
         for (String s : map.keySet()) {
             map.putIfAbsent(s, NULL_FLAG);
         }
         stringRedisTemplate.opsForHash().putAll(k, map);
-        stringRedisTemplate.expire(k, expireSec, TimeUnit.SECONDS);
     }
 
     public Map<String,String> getHashAll(String key) {

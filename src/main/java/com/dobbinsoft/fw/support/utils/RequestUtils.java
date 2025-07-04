@@ -1,8 +1,44 @@
 package com.dobbinsoft.fw.support.utils;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 public class RequestUtils {
+
+    /**
+     * 获取当前 HttpServletRequest
+     *
+     * @return HttpServletRequest 对象
+     */
+    public static HttpServletRequest getCurrentRequest() {
+        ServletRequestAttributes attributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+        return attributes.getRequest();
+    }
+
+    /**
+     * 获取请求头中的参数
+     *
+     * @param headerName 请求头名称
+     * @return 请求头的值
+     */
+    public static String getHeader(String headerName) {
+        HttpServletRequest request = getCurrentRequest();
+        return request.getHeader(headerName);
+    }
+
+    /**
+     * 获取请求参数
+     *
+     * @param paramName 参数名称
+     * @return 参数值
+     */
+    public static String getParameter(String paramName) {
+        HttpServletRequest request = getCurrentRequest();
+        return request.getParameter(paramName);
+    }
 
     /**
      * 获取客户端IP

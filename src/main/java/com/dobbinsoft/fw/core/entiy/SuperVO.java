@@ -1,5 +1,6 @@
 package com.dobbinsoft.fw.core.entiy;
 
+import com.dobbinsoft.fw.core.annotation.param.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,11 +13,12 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Setter
-public class SuperDTO implements Serializable {
+public class SuperVO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
+    @NotNull
     private Long id;
 
     private LocalDateTime gmtUpdate;
